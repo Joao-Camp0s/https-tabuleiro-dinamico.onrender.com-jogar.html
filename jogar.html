@@ -659,8 +659,14 @@
         var board = null;
         var game = new Chess();
         var currentPieceTheme = 'cburnett';
-        var selectedChessSquare = null; // casa selecionada por clique (modo "clicar para jogar", útil no telemóvel onde arrastar é mais difícil)
-        var boardArrastando = false; // true enquanto uma peça está a ser arrastada, para o clique nas casas vazias não interferir com o arrastar
+        var selectedChessSquare = null; // casa selecionada por clique (modo "clicar para jogar")
+        var boardArrastando = false; // true enquanto uma peça está a ser arrastada, para o clique não interferir com o arrastar
+        var boardDraggableAtivo = true; // false em ecrãs táteis: aí só se pode jogar por clique, não por arrastar
+
+        // Deteta se o dispositivo usa como entrada principal o toque (telemóvel/tablet) em vez do rato.
+        function ehEcraTatil() {
+            return window.matchMedia('(pointer: coarse)').matches;
+        }
 
         const resizeObserver = new ResizeObserver(() => { 
             if (board && document.getElementById('gameType').value === 'xadrez') board.resize(); 
@@ -1216,8 +1222,9 @@
         }
 
         function initBoard(orientation) {
+            boardDraggableAtivo = !ehEcraTatil(); // em telemóvel só se joga por clique, o arrastar fica desligado
             board = Chessboard('myBoard', {
-                draggable: true,
+                draggable: boardDraggableAtivo,
                 position: game.fen(),
                 orientation: orientation || 'white',
                 onDragStart: function () { boardArrastando = true; },
@@ -1230,16 +1237,19 @@
             try { board.resize(); } catch(e) { console.warn('Board init warning:', e); }
         }
 
-        // Liga o clique nas casas VAZIAS do tabuleiro (as casas com peça já são apanhadas pelo onDrop acima,
-        // já que largar uma peça em cima de si própria conta como um clique). Fica ligado uma única vez,
-        // porque a div #myBoard nunca é destruída — só o conteúdo lá dentro é recriado ao mudar de estilo de peças.
+        // Liga o clique nas casas do tabuleiro. Fica ligado uma única vez, porque a div #myBoard nunca é
+        // destruída — só o conteúdo lá dentro é recriado ao mudar de estilo de peças.
+        // - Com o arrastar ativo (desktop): só trata das casas VAZIAS, porque largar uma peça em cima de
+        //   si própria (onDrop com origem = destino) já conta como um clique nessa casa.
+        // - Com o arrastar desativado (telemóvel): trata de TODAS as casas, já que o onDrop nunca é chamado
+        //   quando não há arrastar disponível.
         $('#myBoard').on('click', '.square-55d63', function () {
             if (boardArrastando) return; // ignora o clique "fantasma" que surge logo a seguir a um arrastar
             const casa = this.className.split(/\s+/).find(c => /^square-[a-h][1-8]$/.test(c));
             if (!casa) return;
             const nomeCasa = casa.replace('square-', '');
-            if (game.get(nomeCasa)) return; // casa ocupada, já tratada pelo onDrop
-            onSquareClick(nomeCasa, null);
+            if (boardDraggableAtivo && game.get(nomeCasa)) return; // casa ocupada, já tratada pelo onDrop
+            onSquareClick(nomeCasa, obterCodigoPeca(nomeCasa));
         });
 
         async function handleReset() {
