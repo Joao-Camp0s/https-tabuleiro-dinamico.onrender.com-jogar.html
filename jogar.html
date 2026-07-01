@@ -1,0 +1,1529 @@
+﻿<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TABULEIRO DINÂMICO - JOGAR</title>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.85em%22 font-size=%2280%22 font-family=%22Georgia,serif%22>♟</text></svg>">
+    
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/theme-toggle.js"></script>
+    <script src="js/sound-manager.js"></script>
+
+    <link rel="stylesheet" href="css/jogar.css">
+    <link rel="stylesheet" href="css/light-mode-fixes.css">
+    <link rel="stylesheet" href="css/buttons.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo"><span>♟</span> TABULEIRO DINÂMICO</a>
+        <div class="nav-right">
+            <ul class="nav-links">
+                <li><a href="index.html">INÍCIO</a></li>
+                <li><a href="aprende.html">APRENDER</a></li>
+                <li><a href="jogar.html" class="active">JOGAR</a></li>
+            </ul>
+            <div class="nav-auth">
+                <div id="navGuestActions">
+                    <a href="entrar.html" class="btn-auth-nav uniform-btn ghost">ENTRAR</a>
+                </div>
+                <div id="navUserActions" class="nav-user-actions" style="display: none;">
+                    <span id="navUserLabel" class="nav-user-label">Conta ativa</span>
+                    <a href="entrar.html" class="account-link primary">Gerir Conta</a>
+                    <button onclick="handleLogout()" class="logout-small">Sair</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="game-container">
+        <div class="board-area">
+            <div class="board-stage">
+                <section class="moves-box">
+                    <h3>Jogadas Ocorridas</h3>
+                    <small class="moves-hint">Desce a barra para baixo para veres todas as jogadas.</small>
+                    <div id="movesList" class="moves-list">
+                        <div class="moves-empty">Ainda não existem jogadas nesta partida.</div>
+                    </div>
+                </section>
+                <div class="board-wrapper" id="boardBox">
+                    <div id="myBoard"></div>
+                    <div id="checkersBoard" style="display: none;"></div>
+                </div>
+                <div class="board-controls">
+                    <div class="board-drag-handle" id="boardDragHandle" title="Arrastar">⠿</div>
+                    <button type="button" onclick="decreaseBoardSize()" title="Diminuir tabuleiro">−</button>
+                    <div class="board-size-label" id="boardSizeLabel">450px</div>
+                    <button type="button" onclick="increaseBoardSize()" title="Aumentar tabuleiro">+</button>
+                </div>
+            </div>
+        </div>
+
+        <aside class="control-panel">
+            <div style="display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:10px;">
+                <h2 style="margin:0;">JOGAR</h2>
+            </div>
+
+            <div class="setting-group">
+                <label>Modalidade</label>
+                <select id="gameType" onchange="switchGameMode()">
+                    <option value="xadrez">Xadrez</option>
+                    <option value="damas">Damas</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label>Modo e Dificuldade</label>
+                <div style="display: flex; gap: 10px;">
+                    <select id="gameMode" onchange="toggleMode()">
+                        <option value="ia">IA</option>
+                        <option value="local">LOCAL</option>
+                        <option value="online">ONLINE</option>
+                    </select>
+                    <select id="difficulty" onchange="onDifficultyChange()">
+                        <option value="1">Nível 1</option>
+                        <option value="2">Nível 2</option>
+                        <option value="3">Nível 3</option>
+                        <option value="4">Nível 4 (Forte)</option>
+                        <option value="5">Nível 5 (Muito Forte)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="onlineSettings" class="setting-group" style="display: none;">
+                <label>Multijogador Online</label>
+                <button type="button" class="uniform-btn" style="width: 100%;" onclick="criarSalaOnline()">CRIAR SALA</button>
+
+                <small class="moves-hint" style="margin-top: 12px; display: block;">Salas à espera de adversário</small>
+                <div id="onlineRoomList" class="online-room-list">
+                    <div class="moves-hint">A carregar...</div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <input type="text" id="onlineRoomInput" placeholder="ou introduz um código" maxlength="12" style="flex: 1; min-width: 0; padding: 10px; border-radius: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Poppins', sans-serif; font-size: 0.85rem;">
+                    <button type="button" class="uniform-btn ghost" onclick="entrarComCodigoOnline()">ENTRAR</button>
+                </div>
+                <small class="moves-hint" id="onlineStatusText">Cria uma sala ou entra numa da lista. Assim que o segundo jogador entra, sorteiam-se as cores.</small>
+            </div>
+
+            <div id="xadrezSettings">
+                <div class="setting-group">
+                    <label>Estilo das Peças (Xadrez)</label>
+                    <select id="pieceStyle" onchange="changePieces(this.value)">
+                        <option value="cburnett">Cburnett (Padrão)</option>
+                        <option value="merida">Merida</option>
+                        <option value="alpha">Alpha</option>
+                        <option value="pixel">Pixel (Retro)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="damasSettings" style="display: none;">
+                <div class="setting-group">
+                    <label>Estilo das Peças (Damas)</label>
+                    <select id="checkersStyle" onchange="changeCheckersStyle(this.value)">
+                        <option value="classic">Clássico (Plástico)</option>
+                        <option value="neon">Futurista (Neon)</option>
+                        <option value="wood">Luxo (Madeira)</option>
+                        <option value="marble">Elegante (Mármore)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label>Cor do Tabuleiro</label>
+                <select onchange="changeTheme(this.value)">
+                    <option value="green">Verde Floresta</option>
+                    <option value="blue">Azul Oceano</option>
+                    <option value="wood">Madeira Real</option>
+                    <option value="dark">Furia da Noite</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label>Relógio</label>
+                <select id="timeControl" onchange="changeTimeControl(this.value)">
+                    <option value="0">Sem limite</option>
+                    <option value="60">1 minuto (Bullet)</option>
+                    <option value="180">3 minutos (Blitz)</option>
+                    <option value="300">5 minutos (Rápido)</option>
+                    <option value="600">10 minutos (Clássico)</option>
+                </select>
+            </div>
+
+            <div class="clocks-box" id="clocksBox">
+                <div class="clock-chip" id="clockBlack">
+                    <span class="clock-label">Pretas</span>
+                    <span class="clock-time" id="clockBlackTime">--:--</span>
+                </div>
+                <div class="clock-chip" id="clockWhite">
+                    <span class="clock-label">Brancas</span>
+                    <span class="clock-time" id="clockWhiteTime">--:--</span>
+                </div>
+            </div>
+
+            <div class="status-box">
+                <div id="status" style="font-weight: 600; font-size: 0.9rem;">BRANCAS A JOGAR</div>
+                <small id="moveInfo">Movimentos possíveis: selecione uma peça</small>
+            </div>
+
+            <button class="btn-action uniform-btn" onclick="handleReset()">REINICIAR</button>
+            <button id="btnFlip" class="btn-action uniform-btn ghost" onclick="board.orientation('flip')">RODAR</button>
+            <button id="soundToggleBtn" class="btn-action uniform-btn ghost" onclick="toggleSound()">SOM: ATIVADO</button>
+        </aside>
+
+        <section class="history-box">
+            <div class="history-header">
+                <h3 class="history-title">Histórico de Partidas</h3>
+                <button id="refreshHistoryBtn" class="history-refresh" onclick="carregarHistoricoPartidas()">Atualizar</button>
+            </div>
+            <p id="historyNote" class="history-note">Inicia sessão para veres as tuas últimas partidas guardadas.</p>
+            <div id="historyList" class="history-list">
+                <div class="history-empty">O teu histórico vai aparecer aqui assim que começares a jogar com a conta iniciada.</div>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script> 
+    
+    <script>
+        // ==========================================
+        // CONFIGURAÇÃO DOS CREDENCIAIS DO SUPABASE (CORRIGIDO)
+        // ==========================================
+        const SUPABASE_URL = window.APP_SUPABASE?.url;
+        const SUPABASE_KEY = window.APP_SUPABASE?.publishableKey; 
+        
+        let supabaseClient = null;
+        try {
+            if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+        } catch(e) {
+            console.error("Erro ao inicializar o Supabase:", e);
+        }
+        
+        let utilizadorLogado = null;
+        const partidasRegistadas = { xadrez: false, damas: false };
+        const registosEmCurso = { xadrez: false, damas: false };
+        let listaJogadasDamas = [];
+
+        function obterDataPartida(partida) {
+            return partida.created_at || partida.data_partida || partida.data_criacao || partida.inserted_at || null;
+        }
+
+        function formatarDataPartida(valorData) {
+            if (!valorData) return 'Data indisponível';
+            const data = new Date(valorData);
+            if (Number.isNaN(data.getTime())) return 'Data indisponível';
+            const dataTexto = new Intl.DateTimeFormat('pt-PT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            }).format(data);
+            const horaTexto = new Intl.DateTimeFormat('pt-PT', {
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(data);
+            return `${dataTexto} às ${horaTexto}`;
+        }
+
+        function obterNomeApresentacao(user) {
+            return user?.user_metadata?.username || user?.user_metadata?.display_name || user?.email || 'Utilizador';
+        }
+
+        function reiniciarEstadoDeRegisto(modalidade) {
+            partidasRegistadas[modalidade] = false;
+            registosEmCurso[modalidade] = false;
+        }
+
+        function renderListaJogadas() {
+            const movesList = document.getElementById('movesList');
+            if (!movesList) return;
+
+            const modalidade = document.getElementById('gameType').value;
+            const jogadas = modalidade === 'xadrez'
+                ? game.history().map((jogada, indice) => ({
+                    numero: indice + 1,
+                    lado: indice % 2 === 0 ? 'Brancas' : 'Pretas',
+                    ladoClasse: indice % 2 === 0 ? 'brancas' : 'pretas',
+                    texto: jogada
+                }))
+                : listaJogadasDamas.map((jogada, indice) => {
+                    const lado = jogada.startsWith('Pretas:') ? 'Pretas' : 'Brancas';
+                    const texto = jogada.replace(/^Brancas:\s*|^Pretas:\s*/, '');
+                    return {
+                        numero: indice + 1,
+                        lado,
+                        ladoClasse: lado.toLowerCase(),
+                        texto
+                    };
+                });
+
+            if (!jogadas.length) {
+                movesList.innerHTML = '<div class="moves-empty">Ainda não existem jogadas nesta partida.</div>';
+                return;
+            }
+
+            movesList.innerHTML = jogadas.map((jogada, indice) => `
+                <div class="move-item">
+                    <div class="move-head">
+                        <span class="move-number">#${jogada.numero}</span>
+                        <span class="move-side ${jogada.ladoClasse}">${jogada.lado}</span>
+                    </div>
+                    <span class="move-text">${jogada.texto}</span>
+                </div>
+            `).join('');
+
+            movesList.scrollTop = movesList.scrollHeight;
+        }
+
+        function obterCoordenadaDamas(r, c) {
+            const coluna = String.fromCharCode(97 + c);
+            const linha = 8 - r;
+            return `${coluna}${linha}`;
+        }
+
+        function renderHistoricoPartidas(partidas = [], mensagem = '') {
+            const noteEl = document.getElementById('historyNote');
+            const listEl = document.getElementById('historyList');
+            const refreshBtn = document.getElementById('refreshHistoryBtn');
+
+            refreshBtn.disabled = !utilizadorLogado || !supabaseClient;
+
+            if (!utilizadorLogado) {
+                noteEl.textContent = 'Inicia sessão para veres as tuas últimas partidas guardadas.';
+                listEl.innerHTML = '<div class="history-empty">O teu histórico fica associado à tua conta e aparece aqui automaticamente.</div>';
+                return;
+            }
+
+            noteEl.textContent = 'Mostra as tuas partidas mais recentes guardadas na conta.';
+
+            if (mensagem) {
+                listEl.innerHTML = `<div class="history-empty">${mensagem}</div>`;
+                return;
+            }
+
+            if (!partidas.length) {
+                listEl.innerHTML = '<div class="history-empty">Ainda não tens partidas registadas. Termina uma partida de xadrez ou damas para a adicionares ao histórico.</div>';
+                return;
+            }
+
+            listEl.innerHTML = partidas.map((partida) => {
+                const modalidade = (partida.modalidade || 'partida').toLowerCase();
+                const etiquetaModalidade = modalidade === 'damas' ? 'Damas' : 'Xadrez';
+                const resultado = partida.resultado || 'Resultado indisponível';
+                const dataFormatada = formatarDataPartida(obterDataPartida(partida));
+
+                return `
+                    <article class="history-item">
+                        <div class="history-main">
+                            <div class="history-topline">
+                                <span class="history-badge ${modalidade === 'damas' ? 'damas' : 'xadrez'}">${etiquetaModalidade}</span>
+                                <span class="history-result">${resultado}</span>
+                            </div>
+                            <span class="history-meta">${dataFormatada}</span>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        async function carregarHistoricoPartidas() {
+            const refreshBtn = document.getElementById('refreshHistoryBtn');
+
+            if (!utilizadorLogado || !supabaseClient) {
+                renderHistoricoPartidas();
+                return;
+            }
+
+            refreshBtn.disabled = true;
+            renderHistoricoPartidas([], 'A carregar o teu histórico...');
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('partidas')
+                    .select('*')
+                    .eq('user_id', utilizadorLogado.id)
+                    .limit(12);
+
+                if (error) {
+                    console.error('Erro ao carregar histórico:', error);
+                    renderHistoricoPartidas([], 'Não foi possível carregar o histórico agora. Tenta novamente daqui a pouco.');
+                    return;
+                }
+
+                const partidasOrdenadas = (data || []).sort((a, b) => {
+                    const dataA = new Date(obterDataPartida(a) || 0).getTime();
+                    const dataB = new Date(obterDataPartida(b) || 0).getTime();
+
+                    if (!Number.isNaN(dataA) && !Number.isNaN(dataB) && dataA !== dataB) {
+                        return dataB - dataA;
+                    }
+
+                    const idA = Number(a.id) || 0;
+                    const idB = Number(b.id) || 0;
+                    return idB - idA;
+                });
+
+                renderHistoricoPartidas(partidasOrdenadas);
+            } catch (e) {
+                console.error('Falha inesperada ao obter histórico:', e);
+                renderHistoricoPartidas([], 'Ocorreu um erro inesperado ao consultar o histórico.');
+            } finally {
+                refreshBtn.disabled = !utilizadorLogado || !supabaseClient;
+            }
+        }
+
+        // Validar sessão ao carregar a página
+        async function verificarSessao() {
+            if(!supabaseClient) {
+                mostrarPainelVisitante();
+                return;
+            }
+            try {
+                const { data, error } = await supabaseClient.auth.getSession();
+                if (error) {
+                    return;
+                }
+
+                const user = data?.session?.user;
+                if (user) {
+                    utilizadorLogado = user;
+                    mostrarPainelLogado(user);
+                } else {
+                    mostrarPainelVisitante();
+                    renderHistoricoPartidas();
+                }
+            } catch(e) {
+                console.log("Sem sessão ativa anterior.");
+                mostrarPainelVisitante();
+                renderHistoricoPartidas();
+            }
+        }
+
+        function toggleSound() {
+            const muted = SoundManager.toggleMute();
+            document.getElementById('soundToggleBtn').textContent = muted ? 'SOM: DESATIVADO' : 'SOM: ATIVADO';
+        }
+
+        // Executar inicializações no carregamento
+        window.onload = function() {
+            initBoard();
+            setBoardSize(450);
+            const dragHandle = document.getElementById('boardDragHandle');
+            const resizeHandle = document.getElementById('boardResizeHandle');
+            if (dragHandle) dragHandle.addEventListener('pointerdown', startBoardDrag);
+            if (resizeHandle) resizeHandle.addEventListener('pointerdown', startBoardResize);
+            document.getElementById('soundToggleBtn').textContent = SoundManager.isMuted() ? 'SOM: DESATIVADO' : 'SOM: ATIVADO';
+            renderClocks();
+            renderHistoricoPartidas();
+            renderListaJogadas();
+            verificarSessao();
+        };
+
+        function mostrarPainelVisitante() {
+            document.getElementById('navGuestActions').style.display = 'block';
+            document.getElementById('navUserActions').style.display = 'none';
+        }
+
+        async function handleLogout() {
+            if(supabaseClient) await supabaseClient.auth.signOut();
+            utilizadorLogado = null;
+            mostrarPainelVisitante();
+            renderHistoricoPartidas();
+        }
+
+        function mostrarPainelLogado(user) {
+            document.getElementById('navGuestActions').style.display = 'none';
+            document.getElementById('navUserActions').style.display = 'flex';
+            document.getElementById('navUserLabel').innerText = obterNomeApresentacao(user);
+            carregarHistoricoPartidas();
+        }
+
+        // Função assíncrona para guardar o histórico na tabela do Supabase
+        async function guardarPartidaNoBanco(modalidade, resultado) {
+            if (partidasRegistadas[modalidade] || registosEmCurso[modalidade]) {
+                return;
+            }
+            if (!utilizadorLogado || !supabaseClient) {
+                console.log("Histórico não guardado (Sessão offline).");
+                return;
+            }
+
+            registosEmCurso[modalidade] = true;
+            const noteEl = document.getElementById('historyNote');
+            const payloadBase = {
+                user_id: utilizadorLogado.id,
+                modalidade: modalidade,
+                resultado: resultado
+            };
+
+            try {
+                let { error } = await supabaseClient
+                    .from('partidas')
+                    .insert([{ ...payloadBase, data_partida: new Date().toISOString() }]);
+
+                if (error && /data_partida|column|schema cache/i.test(error.message || '')) {
+                    ({ error } = await supabaseClient
+                        .from('partidas')
+                        .insert([payloadBase]));
+                }
+
+                if (error) {
+                    console.error("Erro ao guardar na base de dados:", error);
+                    if (noteEl) {
+                        noteEl.textContent = 'Não foi possível guardar a partida no histórico. Confirma que tens sessão iniciada e tenta novamente.';
+                    }
+                    return;
+                }
+
+                partidasRegistadas[modalidade] = true;
+                console.log("Partida registada com sucesso no teu histórico!");
+                carregarHistoricoPartidas();
+            } catch (e) {
+                console.error("Falha inesperada ao guardar no histórico:", e);
+                if (noteEl) {
+                    noteEl.textContent = 'Ocorreu um erro inesperado ao guardar a partida no histórico.';
+                }
+            } finally {
+                registosEmCurso[modalidade] = false;
+            }
+        }
+
+        // --- RELÓGIO (aplica-se a xadrez e damas) ---
+        let timeControlSeconds = 0;
+        let clockWhiteSeconds = 0;
+        let clockBlackSeconds = 0;
+        let clockInterval = null;
+        let jogoBloqueado = false;
+
+        function formatClock(seconds) {
+            const s = Math.max(0, Math.round(seconds));
+            const m = Math.floor(s / 60);
+            const r = s % 60;
+            return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
+        }
+
+        function currentClockSide() {
+            if (document.getElementById('gameType').value === 'xadrez') {
+                return game.turn() === 'w' ? 'white' : 'black';
+            }
+            return damasTurn === 2 ? 'white' : 'black';
+        }
+
+        function renderClocks() {
+            const whiteEl = document.getElementById('clockWhiteTime');
+            const blackEl = document.getElementById('clockBlackTime');
+            const whiteChip = document.getElementById('clockWhite');
+            const blackChip = document.getElementById('clockBlack');
+            if (!whiteEl || !blackEl) return;
+
+            if (timeControlSeconds <= 0) {
+                whiteEl.textContent = '--:--';
+                blackEl.textContent = '--:--';
+                whiteChip.classList.remove('active', 'low-time');
+                blackChip.classList.remove('active', 'low-time');
+                return;
+            }
+
+            whiteEl.textContent = formatClock(clockWhiteSeconds);
+            blackEl.textContent = formatClock(clockBlackSeconds);
+
+            const side = currentClockSide();
+            whiteChip.classList.toggle('active', side === 'white' && !jogoBloqueado);
+            blackChip.classList.toggle('active', side === 'black' && !jogoBloqueado);
+            whiteChip.classList.toggle('low-time', clockWhiteSeconds <= 10);
+            blackChip.classList.toggle('low-time', clockBlackSeconds <= 10);
+        }
+
+        function stopClockInterval() {
+            if (clockInterval) {
+                clearInterval(clockInterval);
+                clockInterval = null;
+            }
+        }
+
+        function tickClock() {
+            if (jogoBloqueado) { stopClockInterval(); return; }
+            const side = currentClockSide();
+            if (side === 'white') clockWhiteSeconds -= 1; else clockBlackSeconds -= 1;
+
+            if (clockWhiteSeconds <= 0 || clockBlackSeconds <= 0) {
+                clockWhiteSeconds = Math.max(0, clockWhiteSeconds);
+                clockBlackSeconds = Math.max(0, clockBlackSeconds);
+                handleFlagFall(clockWhiteSeconds <= 0 ? 'white' : 'black');
+                return;
+            }
+            renderClocks();
+        }
+
+        function handleFlagFall(ladoSemTempo) {
+            jogoBloqueado = true;
+            stopClockInterval();
+            const vencedor = ladoSemTempo === 'white' ? 'Pretas' : 'Brancas';
+            const statusEl = document.getElementById('status');
+            if (statusEl) statusEl.innerText = 'TEMPO ESGOTADO - VITÓRIA DAS ' + vencedor.toUpperCase();
+            SoundManager.gameOver();
+            const modalidade = document.getElementById('gameType').value === 'xadrez' ? 'xadrez' : 'damas';
+            guardarPartidaNoBanco(modalidade, 'Vitória das ' + vencedor + ' (tempo esgotado)');
+            renderClocks();
+        }
+
+        function syncClockToTurn() {
+            stopClockInterval();
+            if (timeControlSeconds <= 0 || jogoBloqueado) { renderClocks(); return; }
+            clockInterval = setInterval(tickClock, 1000);
+            renderClocks();
+        }
+
+        function resetClocks() {
+            jogoBloqueado = false;
+            clockWhiteSeconds = timeControlSeconds;
+            clockBlackSeconds = timeControlSeconds;
+            syncClockToTurn();
+        }
+
+        function changeTimeControl(value) {
+            timeControlSeconds = parseInt(value, 10) || 0;
+            resetClocks();
+        }
+
+        // --- MOTOR STOCKFISH (usado nos níveis 4 e 5 do xadrez) ---
+        // O worker tem de ser carregado via blob: porque o construtor Worker() não aceita URLs de outra origem diretamente.
+        let stockfishWorker = null;
+        let stockfishLoadFalhou = false;
+        let stockfishInitPromise = null;
+
+        function initStockfish() {
+            if (stockfishInitPromise) return stockfishInitPromise;
+
+            stockfishInitPromise = (async () => {
+                try {
+                    const resposta = await fetch('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.min.js');
+                    if (!resposta.ok) throw new Error('HTTP ' + resposta.status);
+                    const codigo = await resposta.text();
+                    const blob = new Blob([codigo], { type: 'application/javascript' });
+                    stockfishWorker = new Worker(URL.createObjectURL(blob));
+                    stockfishWorker.postMessage('uci');
+                } catch (e) {
+                    console.warn('Não foi possível carregar o motor Stockfish, a usar a IA simples como alternativa.', e);
+                    stockfishWorker = null;
+                    stockfishLoadFalhou = true;
+                }
+            })();
+
+            return stockfishInitPromise;
+        }
+
+        async function stockfishBestMove(fen, profundidade) {
+            await initStockfish();
+            if (!stockfishWorker) return null;
+
+            return new Promise((resolve) => {
+                const timeoutId = setTimeout(() => {
+                    stockfishWorker.removeEventListener('message', onMessage);
+                    resolve(null);
+                }, 8000);
+
+                function onMessage(e) {
+                    const linha = typeof e.data === 'string' ? e.data : (e.data && e.data.data);
+                    if (typeof linha === 'string' && linha.indexOf('bestmove') === 0) {
+                        clearTimeout(timeoutId);
+                        stockfishWorker.removeEventListener('message', onMessage);
+                        const partes = linha.split(' ');
+                        resolve(partes[1] && partes[1] !== '(none)' ? partes[1] : null);
+                    }
+                }
+
+                stockfishWorker.addEventListener('message', onMessage);
+                stockfishWorker.postMessage('position fen ' + fen);
+                stockfishWorker.postMessage('go depth ' + profundidade);
+            });
+        }
+
+        function onDifficultyChange() {
+            const nivel = document.getElementById('difficulty').value;
+            if (nivel === '4' || nivel === '5') initStockfish();
+        }
+
+        // --- LÓGICA GLOBAL E XADREZ ---
+        var board = null;
+        var game = new Chess();
+        var currentPieceTheme = 'cburnett';
+        var selectedChessSquare = null;
+
+        const resizeObserver = new ResizeObserver(() => { 
+            if (board && document.getElementById('gameType').value === 'xadrez') board.resize(); 
+        });
+        resizeObserver.observe(document.getElementById('boardBox'));
+
+        function changePieces(style) {
+            currentPieceTheme = style;
+            const orientacaoAtual = board ? board.orientation() : 'white';
+            board.destroy();
+            initBoard(orientacaoAtual);
+        }
+
+        function changeTheme(theme) {
+            const root = document.querySelector(':root');
+            const colors = { 
+                green: ['#ebecd0', '#779556'], 
+                blue: ['#dee3e6', '#8ca2ad'], 
+                wood: ['#f0d9b5', '#b58863'],
+                dark: ['#4b4b4b', '#2b2b2b'] 
+            };
+            root.style.setProperty('--board-light', colors[theme][0]);
+            root.style.setProperty('--board-dark', colors[theme][1]);
+            if (document.getElementById('gameType').value === 'damas') renderDamas();
+        }
+
+        // Board size controls (aplica a ambos os jogos)
+        let boardOffsetX = 0;
+        let boardOffsetY = 0;
+        let boardDragActive = false;
+        let boardResizeActive = false;
+        let boardDragStart = { x: 0, y: 0 };
+        let boardResizeStart = { x: 0, y: 0, size: 450 };
+
+        function setBoardSize(px) {
+            const wrapper = document.querySelector('.board-wrapper');
+            const availableWidth = wrapper && wrapper.parentElement ? wrapper.parentElement.clientWidth : Number(px);
+            const v = Math.max(280, Math.min(585, availableWidth || 585, Number(px)));
+            if (wrapper) {
+                wrapper.style.width = v + 'px';
+                wrapper.style.height = v + 'px';
+            }
+            const label = document.getElementById('boardSizeLabel');
+            if (label) label.textContent = v + 'px';
+            if (document.getElementById('gameType').value === 'xadrez') {
+                try { if (board) board.resize(); } catch(e) { console.warn(e); }
+            } else {
+                try { renderDamas(); } catch(e) { console.warn(e); }
+            }
+        }
+
+        function getCurrentBoardSize() {
+            const wrapper = document.querySelector('.board-wrapper');
+            if (!wrapper) return 450;
+            const computed = window.getComputedStyle(wrapper).getPropertyValue('width');
+            return parseInt(computed, 10) || wrapper.offsetWidth || 450;
+        }
+
+        function increaseBoardSize() {
+            const current = getCurrentBoardSize();
+            setBoardSize(current + 20);
+        }
+
+        function decreaseBoardSize() {
+            const current = getCurrentBoardSize();
+            setBoardSize(current - 20);
+        }
+
+        function updateBoardOffset() {
+            const wrapper = document.querySelector('.board-wrapper');
+            if (wrapper) wrapper.style.transform = `translate(${boardOffsetX}px, ${boardOffsetY}px)`;
+        }
+
+        function startBoardDrag(event) {
+            event.preventDefault();
+            boardDragActive = true;
+            boardDragStart = { x: event.clientX, y: event.clientY };
+            document.body.style.cursor = 'grabbing';
+        }
+
+        function startBoardResize(event) {
+            event.preventDefault();
+            boardResizeActive = true;
+            const wrapper = document.querySelector('.board-wrapper');
+            boardResizeStart = { x: event.clientX, y: event.clientY, size: wrapper ? wrapper.offsetWidth : 450 };
+            document.body.style.cursor = 'se-resize';
+        }
+
+        function stopBoardInteraction() {
+            boardDragActive = false;
+            boardResizeActive = false;
+            document.body.style.cursor = '';
+        }
+
+        function boardPointerMove(event) {
+            if (boardDragActive) {
+                boardOffsetX += event.clientX - boardDragStart.x;
+                boardOffsetY += event.clientY - boardDragStart.y;
+                boardDragStart = { x: event.clientX, y: event.clientY };
+                updateBoardOffset();
+            }
+            if (boardResizeActive) {
+                const diff = Math.max(-boardResizeStart.size + 280, event.clientX - boardResizeStart.x);
+                setBoardSize(boardResizeStart.size + diff);
+            }
+        }
+
+        document.addEventListener('pointermove', boardPointerMove);
+        document.addEventListener('pointerup', stopBoardInteraction);
+
+        function changeCheckersStyle(style) {
+            const root = document.querySelector(':root');
+            if (style === 'classic') {
+                root.style.setProperty('--checkers-white-grad', 'radial-gradient(circle at 30% 30%, #ffffff 0%, #dcdde1 70%, #95a5a6 100%)');
+                root.style.setProperty('--checkers-white-border', '#b2bec3');
+                root.style.setProperty('--checkers-black-grad', 'radial-gradient(circle at 30% 30%, #57606f 0%, #1e272e 70%, #000000 100%)');
+                root.style.setProperty('--checkers-black-border', '#111');
+                root.style.setProperty('--ring-color', 'rgba(0,0,0,0.15)');
+            } else if (style === 'neon') {
+                root.style.setProperty('--checkers-white-grad', 'radial-gradient(circle at 50% 50%, #00f2fe 0%, #4facfe 100%)');
+                root.style.setProperty('--checkers-white-border', '#00f2fe');
+                root.style.setProperty('--checkers-black-grad', 'radial-gradient(circle at 50% 50%, #f43f5e 0%, #881337 100%)');
+                root.style.setProperty('--checkers-black-border', '#f43f5e');
+                root.style.setProperty('--ring-color', 'rgba(255,255,255,0.4)');
+            } else if (style === 'wood') {
+                root.style.setProperty('--checkers-white-grad', 'radial-gradient(circle at 30% 30%, #ffeaa7 0%, #d63031 80%, #8b0000 100%)');
+                root.style.setProperty('--checkers-white-border', '#ff7675');
+                root.style.setProperty('--checkers-black-grad', 'radial-gradient(circle at 30% 30%, #eccac2 0%, #5c3a21 70%, #2b1d0c 100%)');
+                root.style.setProperty('--checkers-black-border', '#3d2511');
+                root.style.setProperty('--ring-color', 'rgba(0,0,0,0.3)');
+            } else if (style === 'marble') {
+                root.style.setProperty('--checkers-white-grad', 'radial-gradient(circle at 28% 22%, rgba(255,255,255,0.95) 0%, transparent 42%), radial-gradient(circle at 72% 78%, rgba(0,0,0,0.12) 0%, transparent 48%), linear-gradient(135deg, #f7f6f2 0%, #dcd9d1 55%, #b9b5a9 100%)');
+                root.style.setProperty('--checkers-white-border', '#8d8a80');
+                root.style.setProperty('--checkers-black-grad', 'radial-gradient(circle at 28% 22%, rgba(255,255,255,0.14) 0%, transparent 42%), radial-gradient(circle at 72% 78%, rgba(255,255,255,0.05) 0%, transparent 50%), linear-gradient(135deg, #3a3a3c 0%, #1d1d1f 60%, #050505 100%)');
+                root.style.setProperty('--checkers-black-border', '#0a0a0a');
+                root.style.setProperty('--ring-color', 'rgba(0,0,0,0.25)');
+            }
+            if (document.getElementById('gameType').value === 'damas') renderDamas();
+        }
+
+        function removeGreySquares () {
+            $('#myBoard .square-55d63').removeClass('highlight-move highlight-source highlight-capture');
+            const info = document.getElementById('moveInfo');
+            if (info) info.textContent = 'Selecione uma peça para ver movimentos';
+        }
+        function highlightSquare(square, isSource = false, isCapture = false) {
+            const squareElem = $('#myBoard .square-' + square);
+            if (isSource) {
+                squareElem.addClass('highlight-source');
+            } else if (isCapture) {
+                squareElem.addClass('highlight-capture');
+            } else {
+                squareElem.addClass('highlight-move');
+            }
+        }
+
+        function highlightChessMoves(square) {
+            removeGreySquares();
+            var moves = game.moves({ square: square, verbose: true });
+            if (moves.length === 0) {
+                const info = document.getElementById('moveInfo');
+                if (info) info.textContent = 'Sem movimentos possíveis para ' + square + '.';
+                return;
+            }
+            highlightSquare(square, true);
+            for (var i = 0; i < moves.length; i++) { highlightSquare(moves[i].to, false, !!moves[i].captured); }
+            const info = document.getElementById('moveInfo');
+            if (info) info.textContent = 'Movimentos possíveis: ' + moves.length + ' para ' + square + '.';
+        }
+
+        function onMouseoverSquare (square, piece) {
+            if (document.getElementById('gameType').value === 'damas' || selectedChessSquare) return;
+            highlightChessMoves(square);
+        }
+
+        function onMouseoutSquare (square, piece) {
+            if (!selectedChessSquare) removeGreySquares();
+        }
+
+        function onSquareClick(square, piece) {
+            if (document.getElementById('gameType').value === 'damas') return;
+            if (selectedChessSquare === square) {
+                selectedChessSquare = null;
+                removeGreySquares();
+                return;
+            }
+            selectedChessSquare = square;
+            highlightChessMoves(square);
+        }
+
+        async function makeMove() {
+            if (jogoBloqueado) return;
+            var moves = game.moves();
+            if (moves.length === 0) return;
+
+            var difficulty = document.getElementById('difficulty').value;
+
+            if (difficulty === '4' || difficulty === '5') {
+                const statusEl = document.getElementById('status');
+                const statusAnterior = statusEl ? statusEl.innerText : '';
+                if (statusEl) statusEl.innerText = 'IA (Stockfish) A PENSAR...';
+
+                const profundidade = difficulty === '4' ? 8 : 14;
+                const uciMove = await stockfishBestMove(game.fen(), profundidade);
+
+                if (jogoBloqueado) return;
+
+                if (uciMove) {
+                    const moveObj = game.move({
+                        from: uciMove.slice(0, 2),
+                        to: uciMove.slice(2, 4),
+                        promotion: uciMove.length > 4 ? uciMove.slice(4, 5) : 'q'
+                    });
+                    if (moveObj) {
+                        board.position(game.fen());
+                        SoundManager[moveObj.captured ? 'capture' : 'move']();
+                        updateStatus();
+                        syncClockToTurn();
+                        return;
+                    }
+                }
+                if (statusEl) statusEl.innerText = statusAnterior;
+            }
+
+            var selectedMove;
+            if (difficulty === '1') { selectedMove = moves[Math.floor(Math.random() * moves.length)]; }
+            else if (difficulty === '2') { selectedMove = moves.find(m => m.includes('x')) || moves[Math.floor(Math.random() * moves.length)]; }
+            else if (difficulty === '3') { selectedMove = getCheckmate(moves) || moves.find(m => m.includes('x')) || moves[Math.floor(Math.random() * moves.length)]; }
+            else { selectedMove = getCheckmate(moves) || getBestCapture(moves) || moves[Math.floor(Math.random() * moves.length)]; }
+
+            var moveObj = game.move(selectedMove);
+            board.position(game.fen());
+            if (moveObj) SoundManager[moveObj.captured ? 'capture' : 'move']();
+            updateStatus();
+            syncClockToTurn();
+        }
+
+        function getCheckmate(moves) {
+            for (let m of moves) {
+                game.move(m);
+                if (game.in_checkmate()) { game.undo(); return m; }
+                game.undo();
+            }
+            return null;
+        }
+
+        function getBestCapture(moves) {
+            const highValue = moves.filter(m => m.includes('xQ') || m.includes('xR') || m.includes('xB') || m.includes('xN'));
+            return highValue.length > 0 ? highValue[0] : moves.find(m => m.includes('x'));
+        }
+
+        function onDrop (source, target) {
+            if (jogoBloqueado) return 'snapback';
+            const modoXadrez = document.getElementById('gameMode').value;
+            if (modoXadrez === 'online' && !estaNaMinhaVezOnline()) return 'snapback';
+
+            selectedChessSquare = null;
+            removeGreySquares();
+            var move = game.move({ from: source, to: target, promotion: 'q' });
+            if (move === null) return 'snapback';
+            SoundManager[move.captured ? 'capture' : 'move']();
+            updateStatus();
+            syncClockToTurn();
+
+            if (modoXadrez === 'ia') {
+                window.setTimeout(makeMove, 500);
+            } else if (modoXadrez === 'online' && onlineSocket && onlineRoomId) {
+                onlineSocket.emit('movimento', { room: onlineRoomId, tipo: 'xadrez', fen: game.fen() });
+            }
+        }
+
+        function onSnapEnd () { board.position(game.fen()); }
+
+        function updateStatus() {
+            var status = game.turn() === 'b' ? 'PRETAS A JOGAR' : 'BRANCAS A JOGAR';
+            if (game.in_checkmate()) {
+                status = 'XEQUE-MATE!';
+                guardarPartidaNoBanco('xadrez', game.turn() === 'b' ? 'Vitória das Brancas' : 'Vitória das Pretas');
+                SoundManager.gameOver();
+                stopClockInterval();
+            } else if (game.in_draw()) {
+                status = 'EMPATE!';
+                guardarPartidaNoBanco('xadrez', 'Empate');
+                SoundManager.gameOver();
+                stopClockInterval();
+            } else if (game.in_check()) {
+                SoundManager.check();
+            }
+            document.getElementById('status').innerText = status;
+            renderListaJogadas();
+        }
+
+        // --- MULTIJOGADOR ONLINE (Socket.io) ---
+        let onlineSocket = null;
+        let onlineRoomId = null;
+        let onlineCor = null; // 'brancas' | 'pretas'
+        let onlineAtivo = false;
+
+        function atualizarEstadoOnline(texto) {
+            const el = document.getElementById('onlineStatusText');
+            if (el) el.textContent = texto;
+        }
+
+        function escapeHtmlJogar(valor) {
+            return String(valor).replace(/[&<>"']/g, function (ch) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+            });
+        }
+
+        function atualizarListaSalasOnline(salas) {
+            const el = document.getElementById('onlineRoomList');
+            if (!el) return;
+
+            if (!salas || !salas.length) {
+                el.innerHTML = '<div class="moves-hint">Nenhuma sala à espera de momento. Cria uma!</div>';
+                return;
+            }
+
+            el.innerHTML = salas.map(function (sala) {
+                const tipo = sala.gameType === 'damas' ? 'Damas' : 'Xadrez';
+                const codigo = escapeHtmlJogar(sala.roomId);
+                return '' +
+                    '<div class="online-room-item">' +
+                        '<span class="online-room-code">' + codigo + '</span>' +
+                        '<span class="online-room-type">' + tipo + '</span>' +
+                        '<button type="button" class="uniform-btn" onclick="entrarNaSalaOnline(\'' + codigo + '\')">ENTRAR</button>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function garantirSocketOnline() {
+            if (onlineSocket) return true;
+            if (typeof io === 'undefined') {
+                atualizarEstadoOnline('O multiplayer só funciona quando o site é aberto a partir do servidor Node (npm start), não em localhost/XAMPP direto.');
+                return false;
+            }
+
+            onlineSocket = io();
+
+            onlineSocket.on('rooms-updated', (salas) => {
+                atualizarListaSalasOnline(salas);
+            });
+
+            onlineSocket.on('room-waiting', (info) => {
+                onlineRoomId = info.roomId;
+                onlineCor = null;
+                onlineAtivo = false;
+                atualizarEstadoOnline('Sala "' + info.roomId + '" criada — à espera de um adversário entrar...');
+            });
+
+            onlineSocket.on('room-not-found', () => {
+                atualizarEstadoOnline('Essa sala não existe. Confirma o código ou escolhe uma da lista.');
+            });
+
+            onlineSocket.on('room-full', () => {
+                atualizarEstadoOnline('Essa sala já tem dois jogadores. Escolhe outra ou cria uma nova.');
+            });
+
+            onlineSocket.on('game-start', (info) => {
+                onlineRoomId = info.roomId;
+                onlineCor = info.cor;
+                onlineAtivo = true;
+                atualizarEstadoOnline('Adversário encontrado! O sorteio deu-te as ' + (info.cor === 'brancas' ? 'Brancas' : 'Pretas') + '. Já podes jogar.');
+                iniciarPartidaOnline();
+            });
+
+            onlineSocket.on('opponent-left', () => {
+                onlineAtivo = false;
+                atualizarEstadoOnline('O adversário saiu da sala. Cria ou entra noutra sala para continuar.');
+            });
+
+            onlineSocket.on('movimento-remoto', (dados) => {
+                aplicarMovimentoRemoto(dados);
+            });
+
+            onlineSocket.on('jogo-reiniciado', () => {
+                aplicarReinicioRemoto();
+            });
+
+            onlineSocket.on('disconnect', () => {
+                onlineAtivo = false;
+                atualizarEstadoOnline('Ligação ao servidor perdida.');
+            });
+
+            return true;
+        }
+
+        function criarSalaOnline() {
+            if (!garantirSocketOnline()) return;
+            const modalidade = document.getElementById('gameType').value;
+            onlineSocket.emit('create-room', { gameType: modalidade });
+            atualizarEstadoOnline('A criar sala...');
+        }
+
+        function entrarNaSalaOnline(roomId) {
+            if (!garantirSocketOnline()) return;
+            onlineSocket.emit('join-room', { roomId: roomId });
+            atualizarEstadoOnline('A entrar na sala "' + roomId + '"...');
+        }
+
+        function entrarComCodigoOnline() {
+            const codigo = (document.getElementById('onlineRoomInput').value || '').trim().toUpperCase();
+            if (!codigo) {
+                atualizarEstadoOnline('Escreve um código de sala primeiro, ou escolhe uma da lista.');
+                return;
+            }
+            entrarNaSalaOnline(codigo);
+        }
+
+        function reiniciarEstadoDamasLocal() {
+            damasState = [
+                [0, 1, 0, 1, 0, 1, 0, 1],
+                [1, 0, 1, 0, 1, 0, 1, 0],
+                [0, 1, 0, 1, 0, 1, 0, 1],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [2, 0, 2, 0, 2, 0, 2, 0],
+                [0, 2, 0, 2, 0, 2, 0, 2],
+                [2, 0, 2, 0, 2, 0, 2, 0]
+            ];
+            damasTurn = 2;
+            damasSelected = null;
+            capturaObrigatoriaComPeca = null;
+            damasMovimentos = 0;
+            listaJogadasDamas = [];
+            renderDamas();
+        }
+
+        function iniciarPartidaOnline() {
+            if (document.getElementById('gameType').value === 'xadrez') {
+                game.reset();
+                board.orientation(onlineCor === 'brancas' ? 'white' : 'black');
+                board.start();
+                updateStatus();
+            } else {
+                reiniciarEstadoDamasLocal();
+            }
+            resetClocks();
+        }
+
+        function aplicarMovimentoRemoto(dados) {
+            if (dados.tipo === 'xadrez') {
+                game.load(dados.fen);
+                board.position(dados.fen);
+                updateStatus();
+                syncClockToTurn();
+            } else if (dados.tipo === 'damas') {
+                damasState = dados.estado;
+                damasTurn = dados.turn;
+                damasSelected = null;
+                capturaObrigatoriaComPeca = null;
+                renderDamas();
+                syncClockToTurn();
+            }
+            SoundManager.move();
+        }
+
+        function aplicarReinicioRemoto() {
+            if (document.getElementById('gameType').value === 'xadrez') {
+                game.reset();
+                board.start();
+                updateStatus();
+            } else {
+                reiniciarEstadoDamasLocal();
+            }
+            resetClocks();
+        }
+
+        function estaNaMinhaVezOnline() {
+            if (!onlineAtivo) return false;
+            if (document.getElementById('gameType').value === 'xadrez') {
+                const minhaCor = onlineCor === 'brancas' ? 'w' : 'b';
+                return game.turn() === minhaCor;
+            }
+            const minhaCorNum = onlineCor === 'brancas' ? 2 : 1;
+            return damasTurn === minhaCorNum;
+        }
+
+        function toggleMode() {
+            const modo = document.getElementById('gameMode').value;
+            document.getElementById('difficulty').disabled = (modo !== 'ia');
+            document.getElementById('onlineSettings').style.display = (modo === 'online') ? 'block' : 'none';
+
+            if (modo === 'online') {
+                garantirSocketOnline();
+            } else if (onlineSocket) {
+                onlineSocket.disconnect();
+                onlineSocket = null;
+                onlineAtivo = false;
+                onlineRoomId = null;
+                onlineCor = null;
+            }
+        }
+
+        function initBoard(orientation) {
+            board = Chessboard('myBoard', {
+                draggable: true,
+                position: game.fen(),
+                orientation: orientation || 'white',
+                onDrop: onDrop,
+                onMouseoutSquare: onMouseoutSquare,
+                onMouseoverSquare: onMouseoverSquare,
+                onSquareClick: onSquareClick,
+                onSnapEnd: onSnapEnd,
+                pieceTheme: 'https://lichess1.org/assets/_6S69X6/piece/' + currentPieceTheme + '/{piece}.svg'
+            });
+            try { board.resize(); } catch(e) { console.warn('Board init warning:', e); }
+        }
+
+        async function handleReset() {
+            if (document.getElementById('gameType').value === 'xadrez') {
+                const houveJogadas = game.history().length > 0;
+                if (houveJogadas && !partidasRegistadas.xadrez) {
+                    await guardarPartidaNoBanco('xadrez', 'Partida reiniciada');
+                }
+                reiniciarEstadoDeRegisto('xadrez');
+                game.reset();
+                board.start();
+                updateStatus();
+            } else {
+                if (damasMovimentos > 0 && !partidasRegistadas.damas) {
+                    await guardarPartidaNoBanco('damas', 'Partida reiniciada');
+                }
+                reiniciarEstadoDeRegisto('damas');
+                damasState = [
+                    [0, 1, 0, 1, 0, 1, 0, 1],
+                    [1, 0, 1, 0, 1, 0, 1, 0],
+                    [0, 1, 0, 1, 0, 1, 0, 1],
+                    [0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0],
+                    [2, 0, 2, 0, 2, 0, 2, 0],
+                    [0, 2, 0, 2, 0, 2, 0, 2],
+                    [2, 0, 2, 0, 2, 0, 2, 0]
+                ];
+                damasTurn = 2;
+                damasSelected = null;
+                capturaObrigatoriaComPeca = null;
+                damasMovimentos = 0;
+                listaJogadasDamas = [];
+                renderDamas();
+            }
+            resetClocks();
+            renderListaJogadas();
+
+            if (document.getElementById('gameMode').value === 'online' && onlineSocket && onlineRoomId) {
+                onlineSocket.emit('reiniciar-jogo', { room: onlineRoomId });
+            }
+        }
+
+        function switchGameMode() {
+            if (document.getElementById('gameMode').value === 'online' && onlineAtivo) {
+                document.getElementById('gameType').value = document.getElementById('myBoard').style.display === 'none' ? 'damas' : 'xadrez';
+                atualizarEstadoOnline('Não é possível trocar de Xadrez/Damas a meio de uma partida online. Termina ou reinicia a sala primeiro.');
+                return;
+            }
+            const type = document.getElementById('gameType').value;
+            if(type === 'xadrez') {
+                document.getElementById('myBoard').style.display = 'block';
+                document.getElementById('checkersBoard').style.display = 'none';
+                document.getElementById('xadrezSettings').style.display = 'block';
+                document.getElementById('damasSettings').style.display = 'none';
+                handleReset();
+            } else {
+                document.getElementById('myBoard').style.display = 'none';
+                document.getElementById('checkersBoard').style.display = 'grid';
+                document.getElementById('xadrezSettings').style.display = 'none';
+                document.getElementById('damasSettings').style.display = 'block';
+                handleReset();
+            }
+            renderListaJogadas();
+        }
+
+        // --- LÓGICA DE DAMAS COMPLETA ---
+        let damasState = [
+            [0, 1, 0, 1, 0, 1, 0, 1],
+            [1, 0, 1, 0, 1, 0, 1, 0],
+            [0, 1, 0, 1, 0, 1, 0, 1],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [2, 0, 2, 0, 2, 0, 2, 0],
+            [0, 2, 0, 2, 0, 2, 0, 2],
+            [2, 0, 2, 0, 2, 0, 2, 0]
+        ];
+
+        let damasTurn = 2; 
+        let damasSelected = null;
+        let damasPossibleMoves = [];
+        let capturaObrigatoriaComPeca = null;
+        let iaProcessando = false;
+        let damasMovimentos = 0;
+
+        function renderDamas() {
+            damasPossibleMoves = damasSelected ? getDamasPossibleMoves(damasSelected.r, damasSelected.c) : [];
+            const dBoard = document.getElementById('checkersBoard');
+            dBoard.innerHTML = '';
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.createElement('div');
+                    square.classList.add('d-square');
+                    square.style.backgroundColor = (r + c) % 2 === 0 ? 'var(--board-light)' : 'var(--board-dark)';
+                    square.addEventListener('click', () => handleDamasClick(r, c));
+
+                    if (damasPossibleMoves.some(m => m.r === r && m.c === c)) {
+                        square.classList.add('highlight-move');
+                    }
+                    if (damasPossibleMoves.some(m => m.captura && m.captura.r === r && m.captura.c === c)) {
+                        square.classList.add('highlight-capture-target');
+                    }
+
+                    const val = damasState[r][c];
+                    if (val !== 0) {
+                        const piece = document.createElement('div');
+                        const isBlack = (val === 1 || val === 11);
+                        piece.classList.add('d-piece', isBlack ? 'd-black' : 'd-white');
+
+                        if (val === 11 || val === 22) {
+                            const crown = document.createElement('span');
+                            crown.className = 'd-crown';
+                            crown.textContent = 'K';
+                            piece.appendChild(crown);
+                        }
+
+                        if (damasSelected && damasSelected.r === r && damasSelected.c === c) {
+                            piece.classList.add('d-selected');
+                        }
+                        square.appendChild(piece);
+                    }
+                    dBoard.appendChild(square);
+                }
+            }
+            
+            if (!jogoBloqueado) {
+                let txtStatus = damasTurn === 2 ? "BRANCAS (TU)" : "PRETAS (IA/LOCAL)";
+                if (capturaObrigatoriaComPeca) {
+                    txtStatus += " - CONTINUE A CAPTURAR!";
+                }
+                document.getElementById('status').innerText = txtStatus;
+            }
+
+            verificarFimDeJogoDamas();
+
+            if (!jogoBloqueado && damasTurn === 1 && document.getElementById('gameMode').value === 'ia' && !iaProcessando) {
+                iaProcessando = true;
+                setTimeout(executarJogadaIADamas, 600);
+            }
+            renderListaJogadas();
+        }
+
+        function verificarFimDeJogoDamas() {
+            let brancas = 0, pretas = 0;
+            for(let r=0; r<8; r++) {
+                for(let c=0; c<8; c++) {
+                    if(damasState[r][c] === 2 || damasState[r][c] === 22) brancas++;
+                    if(damasState[r][c] === 1 || damasState[r][c] === 11) pretas++;
+                }
+            }
+            if (brancas === 0) {
+                document.getElementById('status').innerText = "PRETAS GANHARAM!";
+                guardarPartidaNoBanco('damas', 'Vitória das Pretas');
+                SoundManager.gameOver();
+                jogoBloqueado = true;
+                stopClockInterval();
+            } else if (pretas === 0) {
+                document.getElementById('status').innerText = "BRANCAS GANHARAM!";
+                guardarPartidaNoBanco('damas', 'Vitória das Brancas');
+                SoundManager.gameOver();
+                jogoBloqueado = true;
+                stopClockInterval();
+            }
+        }
+
+        function handleDamasClick(r, c) {
+            if (jogoBloqueado) return;
+            const modoDamas = document.getElementById('gameMode').value;
+            if (damasTurn === 1 && modoDamas === 'ia') return;
+            if (modoDamas === 'online' && !estaNaMinhaVezOnline()) return;
+
+            const val = damasState[r][c];
+            const corPeca = (val === 1 || val === 11) ? 1 : (val === 2 || val === 22) ? 2 : 0;
+
+            if (capturaObrigatoriaComPeca) {
+                if (capturaObrigatoriaComPeca.r === r && capturaObrigatoriaComPeca.c === c) {
+                    damasSelected = { r, c };
+                    renderDamas();
+                } else if (val === 0 && damasSelected) {
+                    executarMovimentoDamas(r, c);
+                }
+                return;
+            }
+
+            if (corPeca === damasTurn) {
+                damasSelected = { r, c };
+                renderDamas();
+                return;
+            }
+
+            if (val === 0 && damasSelected) {
+                executarMovimentoDamas(r, c);
+            }
+        }
+
+        function getDamasPossibleMoves(r, c) {
+            let moves = [];
+            const val = damasState[r][c];
+            if (val === 0) return moves;
+
+            const direcoes = (val === 11 || val === 22) ? [-1, 1] : (val === 1 ? [1] : [-1]);
+
+            direcoes.forEach(dr => {
+                [-1, 1].forEach(dc => {
+                    let nr = r + dr;
+                    let nc = c + dc;
+                    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                        if (damasState[nr][nc] === 0 && !capturaObrigatoriaComPeca) {
+                            moves.push({ r: nr, c: nc });
+                        } else {
+                            let inimigo = damasState[nr][nc];
+                            let corInimigo = (inimigo === 1 || inimigo === 11) ? 1 : (inimigo === 2 || inimigo === 22) ? 2 : 0;
+                            let corPropria = (val === 1 || val === 11) ? 1 : 2;
+                            if (corInimigo !== 0 && corInimigo !== corPropria) {
+                                let nnr = nr + dr;
+                                let nnc = nc + dc;
+                                if (nnr >= 0 && nnr < 8 && nnc >= 0 && nnc < 8 && damasState[nnr][nnc] === 0) {
+                                    moves.push({ r: nnr, c: nnc, captura: { r: nr, c: nc } });
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+            return moves;
+        }
+
+        function promoverSeNecessario(r, c) {
+            if (damasState[r][c] === 1 && r === 7) damasState[r][c] = 11;
+            if (damasState[r][c] === 2 && r === 0) damasState[r][c] = 22;
+        }
+
+        function executarMovimentoDamas(r, c) {
+            const move = damasPossibleMoves.find(m => m.r === r && m.c === c);
+            if (!move) return;
+
+            damasMovimentos += 1;
+            const p = damasSelected;
+            const jogador = damasTurn === 2 ? 'Brancas' : 'Pretas';
+            const origem = obterCoordenadaDamas(p.r, p.c);
+            const destino = obterCoordenadaDamas(r, c);
+            const descricaoJogada = move.captura
+                ? `${jogador}: ${origem} x ${destino}`
+                : `${jogador}: ${origem} -> ${destino}`;
+            damasState[r][c] = damasState[p.r][p.c];
+            damasState[p.r][p.c] = 0;
+            listaJogadasDamas.push(descricaoJogada);
+            SoundManager[move.captura ? 'capture' : 'move']();
+
+            if (move.captura) {
+                damasState[move.captura.r][move.captura.c] = 0;
+                promoverSeNecessario(r, c);
+
+                let novasCapturas = getDamasPossibleMoves(r, c).filter(m => m.captura);
+                if (novasCapturas.length > 0) {
+                    capturaObrigatoriaComPeca = { r, c };
+                    damasSelected = { r, c };
+                    emitirMovimentoDamasSeOnline();
+                    renderDamas();
+                    renderListaJogadas();
+                    return;
+                }
+            }
+
+            promoverSeNecessario(r, c);
+            capturaObrigatoriaComPeca = null;
+            damasSelected = null;
+            damasTurn = damasTurn === 1 ? 2 : 1;
+            syncClockToTurn();
+            emitirMovimentoDamasSeOnline();
+            renderDamas();
+            renderListaJogadas();
+        }
+
+        function emitirMovimentoDamasSeOnline() {
+            if (document.getElementById('gameMode').value === 'online' && onlineSocket && onlineRoomId) {
+                onlineSocket.emit('movimento', { room: onlineRoomId, tipo: 'damas', estado: damasState, turn: damasTurn });
+            }
+        }
+
+        // Simula o tabuleiro após uma jogada de damas, sem alterar o estado real
+        function simularEstadoDamas(jogada) {
+            const novo = damasState.map((linha) => linha.slice());
+            novo[jogada.para.r][jogada.para.c] = novo[jogada.de.r][jogada.de.c];
+            novo[jogada.de.r][jogada.de.c] = 0;
+            if (jogada.para.captura) novo[jogada.para.captura.r][jogada.para.captura.c] = 0;
+            return novo;
+        }
+
+        // Verifica se, no estado dado, uma peça branca adjacente consegue capturar a peça pretas em (r,c)
+        function pecaDamasEmPerigo(estado, r, c) {
+            const direcoesDiagonais = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+            for (const [dr, dc] of direcoesDiagonais) {
+                const or = r - dr, oc = c - dc;
+                const lr = r + dr, lc = c + dc;
+                if (or < 0 || or > 7 || oc < 0 || oc > 7 || lr < 0 || lr > 7 || lc < 0 || lc > 7) continue;
+                const atacante = estado[or][oc];
+                const isBranco = atacante === 2 || atacante === 22;
+                if (isBranco && estado[lr][lc] === 0) return true;
+            }
+            return false;
+        }
+
+        // Nos níveis 4/5, escolhe a jogada com melhor pontuação simples (captura > promoção > segurança); nos restantes, é aleatória
+        function escolherJogadaIADamas(todasJogadas, capturas) {
+            const candidatas = capturas.length > 0 ? capturas : todasJogadas;
+            if (!candidatas.length) return null;
+
+            const difficulty = parseInt(document.getElementById('difficulty').value, 10) || 1;
+            if (difficulty < 4) {
+                return candidatas[Math.floor(Math.random() * candidatas.length)];
+            }
+
+            let melhores = [];
+            let melhorPontuacao = -Infinity;
+            candidatas.forEach((jogada) => {
+                const estadoSimulado = simularEstadoDamas(jogada);
+                let pontuacao = jogada.para.captura ? 10 : 0;
+                if (jogada.para.r === 7) pontuacao += 6;
+                if (pecaDamasEmPerigo(estadoSimulado, jogada.para.r, jogada.para.c)) pontuacao -= 5;
+
+                if (pontuacao > melhorPontuacao) {
+                    melhorPontuacao = pontuacao;
+                    melhores = [jogada];
+                } else if (pontuacao === melhorPontuacao) {
+                    melhores.push(jogada);
+                }
+            });
+            return melhores[Math.floor(Math.random() * melhores.length)];
+        }
+
+        function executarJogadaIADamas() {
+            if (jogoBloqueado) { iaProcessando = false; return; }
+            let todasJogadas = [];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    let val = damasState[r][c];
+                    if (val === 1 || val === 11) {
+                        let mv = getDamasPossibleMoves(r, c);
+                        mv.forEach(m => todasJogadas.push({ de: { r, c }, para: m }));
+                    }
+                }
+            }
+
+            let capturas = todasJogadas.filter(j => j.para.captura);
+            let jogadaEscolhida = escolherJogadaIADamas(todasJogadas, capturas);
+
+            if (jogadaEscolhida) {
+                damasSelected = jogadaEscolhida.de;
+                damasPossibleMoves = getDamasPossibleMoves(damasSelected.r, damasSelected.c);
+                executarMovimentoDamas(jogadaEscolhida.para.r, jogadaEscolhida.para.c);
+            } else {
+                damasTurn = 2; 
+            }
+            iaProcessando = false;
+            renderDamas();
+        }
+    </script>
+</body>
+</html>

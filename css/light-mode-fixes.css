@@ -1,0 +1,229 @@
+body.light-mode {
+    background: radial-gradient(circle at top, #f4f7fb 0%, #ffffff 58%, #eef4ff 100%) !important;
+}
+
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+body.light-mode .theme-toggle {
+    background: rgba(255, 255, 255, 0.9);
+    color: #1e293b;
+    border-color: rgba(148, 163, 184, 0.4);
+    box-shadow: 0 12px 28px rgba(148, 163, 184, 0.2);
+}
+
+body.light-mode .theme-toggle:hover {
+    background: rgba(52, 152, 219, 0.12);
+    border-color: rgba(52, 152, 219, 0.32);
+}
+
+body.light-mode .navbar {
+    border-bottom-color: rgba(148, 163, 184, 0.28) !important;
+    box-shadow: 0 12px 30px rgba(148, 163, 184, 0.12);
+}
+
+body.light-mode .nav-links a {
+    color: var(--text-primary) !important;
+}
+
+body.light-mode .nav-links a.active {
+    color: var(--accent-blue) !important;
+}
+
+body.light-mode :is(
+    .hero-card,
+    .about-card,
+    .learn-section,
+    .quick-card,
+    .piece-box,
+    .principle-card,
+    .training-card,
+    .damas-card,
+    .gallery-shot,
+    .auth-card,
+    .session-box,
+    .account-panel,
+    .control-panel,
+    .history-box,
+    .history-item,
+    .history-empty,
+    .board-controls,
+    .board-wrapper
+) {
+    background: rgba(255, 255, 255, 0.78) !important;
+    border-color: rgba(148, 163, 184, 0.26) !important;
+    box-shadow: 0 20px 45px rgba(148, 163, 184, 0.16);
+}
+
+body.light-mode :is(.rule-card, .tactics-list li, .player-stats) {
+    background: rgba(241, 245, 249, 0.92) !important;
+    border-color: rgba(148, 163, 184, 0.24) !important;
+    box-shadow: none;
+}
+
+body.light-mode :is(.scribd-embed, .player-item) {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+body.light-mode :is(
+    .hero-card p,
+    .about-card p,
+    header p,
+    .hero-panel p,
+    .rule-text p,
+    .diagram-box p,
+    .tactics-list span,
+    .player-bio p,
+    .history-note,
+    .history-meta,
+    .helper,
+    .gallery-shot small,
+    .piece-box p,
+    .quick-card span,
+    .principle-card span,
+    .training-card span,
+    .damas-card span,
+    .stat-box,
+    .status-box small,
+    .account-panel p
+) {
+    color: #475569 !important;
+}
+
+body.light-mode :is(
+    .quick-card strong,
+    .principle-card strong,
+    .training-card strong,
+    .damas-card strong,
+    .diagram-box strong,
+    .tactics-list strong,
+    .player-bio h4,
+    .stat-box strong,
+    .history-title,
+    .history-result,
+    .account-panel h2,
+    .status-box,
+    .piece-box h4
+) {
+    color: #0f172a !important;
+}
+
+body.light-mode :is(
+    .btn-auth-nav,
+    .uniform-btn.ghost,
+    .secondary-btn,
+    .history-refresh,
+    .switcher button,
+    .tab-btn,
+    .board-controls button,
+    .board-drag-handle,
+    .board-resize-handle
+) {
+    background: rgba(255, 255, 255, 0.88) !important;
+    color: #1f2937 !important;
+    border: 1px solid rgba(148, 163, 184, 0.34) !important;
+    box-shadow: 0 10px 24px rgba(148, 163, 184, 0.12);
+}
+
+body.light-mode :is(
+    .btn-auth-nav:hover,
+    .uniform-btn.ghost:hover,
+    .secondary-btn:hover,
+    .history-refresh:hover,
+    .switcher button:hover,
+    .tab-btn:hover,
+    .board-controls button:hover,
+    .board-drag-handle:hover,
+    .board-resize-handle:hover
+) {
+    background: rgba(52, 152, 219, 0.12) !important;
+    border-color: rgba(52, 152, 219, 0.26) !important;
+}
+
+body.light-mode :is(.switcher button.active, .tab-btn.active) {
+    background: var(--accent-blue) !important;
+    color: #ffffff !important;
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 0 20px rgba(52, 152, 219, 0.22);
+}
+
+body.light-mode .btn-secondary {
+    color: var(--accent-blue) !important;
+    background: rgba(52, 152, 219, 0.08) !important;
+}
+
+body.light-mode :is(input, select) {
+    background: rgba(255, 255, 255, 0.94) !important;
+    color: #0f172a !important;
+    border-color: rgba(148, 163, 184, 0.34) !important;
+}
+
+body.light-mode input::placeholder {
+    color: #94a3b8;
+}
+
+body.light-mode label {
+    color: #475569 !important;
+}
+
+body.light-mode :is(
+    .gallery-shot img,
+    .rule-img,
+    .player-photo,
+    .piece-img,
+    .principle-card img,
+    .damas-images-grid img
+) {
+    background: linear-gradient(135deg, #f8fbff, #edf4ff) !important;
+    border-color: rgba(52, 152, 219, 0.22) !important;
+    box-shadow: 0 14px 30px rgba(148, 163, 184, 0.16);
+}
+
+body.light-mode .piece-icon {
+    background: rgba(52, 152, 219, 0.12) !important;
+    color: #1d4ed8;
+}
+
+body.light-mode .player-avatar {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.18), rgba(46, 204, 113, 0.14)) !important;
+}
+
+body.light-mode .diagram-box {
+    background: rgba(52, 152, 219, 0.08) !important;
+}
+
+body.light-mode .status-box {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-left-color: var(--accent-blue) !important;
+}
+
+body.light-mode .history-badge.xadrez {
+    background: rgba(52, 152, 219, 0.14);
+    color: #0369a1;
+}
+
+body.light-mode .history-badge.damas {
+    background: rgba(46, 204, 113, 0.14);
+    color: #15803d;
+}
+
+body.light-mode .footer {
+    background: rgba(248, 250, 252, 0.95) !important;
+    color: #64748b !important;
+    border-top-color: rgba(148, 163, 184, 0.24) !important;
+}

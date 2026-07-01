@@ -1,0 +1,726 @@
+﻿<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APRENDER - TABULEIRO DINÂMICO</title>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.85em%22 font-size=%2280%22 font-family=%22Georgia,serif%22>♟</text></svg>">
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/navbar-session.js"></script>
+    <script src="js/theme-toggle.js"></script>
+
+    <link rel="stylesheet" href="css/aprende.css">
+    <link rel="stylesheet" href="css/light-mode-fixes.css">
+    <link rel="stylesheet" href="css/buttons.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo"><span>♟</span> TABULEIRO DINÂMICO</a>
+        <div class="nav-right">
+            <ul class="nav-links">
+                <li><a href="index.html">Início</a></li>
+                <li><a href="aprende.html" class="active">Aprender</a></li>
+                <li><a href="jogar.html">Jogar</a></li>
+            </ul>
+            <div class="nav-auth">
+                <div id="navGuestActions">
+                    <a href="entrar.html" class="btn-auth-nav uniform-btn ghost">Entrar</a>
+                </div>
+                <div id="navUserActions" class="nav-user-actions" style="display: none;">
+                    <span id="navUserLabel" class="nav-user-label">Conta ativa</span>
+                    <a href="entrar.html" class="account-link primary">Gerir Conta</a>
+                    <button onclick="handleLogout()" class="logout-small">Sair</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchGameTab('xadrez')">♟ Treino de Xadrez</button>
+        <button class="tab-btn" onclick="switchGameTab('damas')">⛂ Treino de Damas</button>
+    </div>
+
+    <div class="learn-container">
+        <header>
+            <h1>Guia de Formação</h1>
+            <p>Aprende as regras, domina padrões táticos, estuda finais e conhece mestres que marcaram a história do xadrez e das damas.</p>
+        </header>
+
+        <div id="content-xadrez" class="tab-content active">
+            <section class="learn-section">
+                <div class="hero-panel">
+                    <div>
+                        <h2>Base de Estudo do Xadrez</h2>
+                        <h3>Do primeiro lance ao xeque-mate</h3>
+                        <p>Para evoluíres no xadrez precisas de combinar três camadas: conhecer o movimento das peças, reconhecer padrões táticos e entender o plano geral da posição. Quem melhora mais depressa não é quem memoriza mais jogadas, mas sim quem aprende a perguntar "o que está ameaçado?", "quem controla o centro?" e "qual é a pior peça do meu lado?".</p>
+                        <p>Nesta secção tens um resumo prático para jogares com mais segurança, aproveitares melhor o teu tabuleiro e reconheceres rapidamente oportunidades de ataque, defesa e conversão no final.</p>
+                        <div class="quick-grid">
+                            <div class="quick-card">
+                                <strong>Objetivo Principal</strong>
+                                <span>Dar xeque-mate ao Rei adversário, impedindo qualquer fuga, bloqueio ou captura da peça atacante.</span>
+                            </div>
+                            <div class="quick-card">
+                                <strong>Prioridade Inicial</strong>
+                                <span>Controlar o centro, desenvolver peças leves e colocar o Rei em segurança logo nos primeiros lances.</span>
+                            </div>
+                            <div class="quick-card">
+                                <strong>Erro Mais Comum</strong>
+                                <span>Mexer demasiadas vezes a mesma peça cedo demais e ficar para trás no desenvolvimento.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="side-gallery">
+                        <div class="gallery-shot">
+                            <img src="Imagem/Roque1.jpg" alt="Demonstração do roque no xadrez">
+                            <small>Segurança do Rei</small>
+                        </div>
+                        <div class="gallery-shot">
+                            <img src="Imagem/promocao.png" alt="Promoção de peão no xadrez">
+                            <small>Promoção do Peão</small>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="learn-section">
+                <h2>Desafio Tático: Mate em 1</h2>
+                <p class="moves-hint">Encontra o xeque-mate em apenas uma jogada. Arrasta a peça certa para a casa certa — o padrão chama-se "mate ao corredor" (back-rank mate).</p>
+                <div class="puzzle-layout">
+                    <div id="puzzleChessBoard" class="puzzle-chess-board"></div>
+                    <div class="puzzle-side">
+                        <div class="puzzle-status" id="puzzleChessStatus">Desafio 1 de 3 — encontra o mate em 1 jogada.</div>
+                        <div class="puzzle-actions">
+                            <button type="button" class="uniform-btn ghost" onclick="puzzleChessToggleHint()">MOSTRAR/OCULTAR DICA</button>
+                            <p class="puzzle-hint-text" id="puzzleChessHintText" style="display:none;">A peça de longo alcance consegue chegar à última fila sem ser capturada.</p>
+                            <button type="button" class="uniform-btn ghost" onclick="puzzleChessReset()">REPETIR DESAFIO</button>
+                            <button type="button" class="uniform-btn" onclick="puzzleChessNext()">PRÓXIMO DESAFIO</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="learn-section">
+                <h2>As Peças do Xadrez</h2>
+                <div class="pieces-grid chess-row">
+                    <div class="piece-box">
+                        <div class="piece-header">
+                            <div class="piece-icon">♔</div>
+                            <h4>Rei</h4>
+                        </div>
+                        <p>Move-se uma casa em qualquer direção. É a peça que nunca pode ser sacrificada. Mesmo sendo limitada, torna-se muito forte nos finais quando passa a participar ativamente na luta pelo centro e pelos peões passados.</p>
+                    </div>
+                    <div class="piece-box">
+                        <div class="piece-header">
+                            <div class="piece-icon">♕</div>
+                            <h4>Dama</h4>
+                        </div>
+                        <p>É a peça mais poderosa do tabuleiro, combinando movimentos da torre e do bispo. Deve ser usada com critério: sair cedo demais costuma fazê-la perder tempos e ficar exposta a ataques menores.</p>
+                    </div>
+                    <div class="piece-box">
+                        <div class="piece-header">
+                            <div class="piece-icon">♖</div>
+                            <h4>Torre</h4>
+                        </div>
+                        <p>Move-se em linhas retas. Ganha força em colunas abertas e na sétima fila. Duas torres coordenadas podem esmagar a posição adversária, sobretudo quando o Rei rival está limitado.</p>
+                    </div>
+                    <div class="piece-box">
+                        <div class="piece-header">
+                            <div class="piece-icon">♗</div>
+                            <h4>Bispo</h4>
+                        </div>
+                        <p>Domina diagonais longas e cresce muito em posições abertas. O par de bispos é uma vantagem estratégica importante porque cobre casas de ambas as cores em simultâneo.</p>
+                    </div>
+                    <div class="piece-box">
+                        <div class="piece-header">
+                            <div class="piece-icon">♘</div>
+                            <h4>Cavalo</h4>
+                        </div>
+                        <p>Move-se em "L" e salta por cima de outras peças. É brilhante em casas avançadas protegidas por peões, onde cria garfos, ataques duplos e enorme pressão sobre o campo inimigo.</p>
+                    </div>
+                    <div class="piece-box">
+                        <div class="piece-header">
+                            <div class="piece-icon">♙</div>
+                            <h4>Peão</h4>
+                        </div>
+                        <p>Avança em frente e captura na diagonal. A estrutura de peões define muitos planos da partida. Peões isolados, dobrados, passados ou atrasados mudam completamente a avaliação de uma posição.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="learn-section">
+                <h2>Regras Especiais e Posições-Chave</h2>
+
+                <div class="rule-card">
+                    <div class="rule-text">
+                        <h3>Roque Curto e Longo</h3>
+                        <p>O roque protege o Rei e traz uma torre para o jogo. Só podes fazer roque se o Rei e a torre ainda não se moveram, se o caminho estiver livre e se o Rei não estiver em xeque nem passe por casas atacadas.</p>
+                        <ul>
+                            <li>Roque curto: mais rápido e mais comum.</li>
+                            <li>Roque longo: mais agressivo, mas exige mais cuidado com o flanco da Dama.</li>
+                            <li>Regra prática: quanto mais cedo segurares o Rei, mais simples fica o resto da partida.</li>
+                        </ul>
+                    </div>
+                    <img src="Imagem/Roque1.jpg" class="rule-img" alt="Exemplo de roque no xadrez">
+                </div>
+
+                <div class="rule-card">
+                    <div class="rule-text">
+                        <h3>Coordenação Após o Roque</h3>
+                        <p>Depois de fazeres roque, o plano não termina. A próxima tarefa é ligar as torres, desenvolver a última peça menor e escolher a coluna ou diagonal onde vais criar pressão real.</p>
+                        <ul>
+                            <li>Evita abrir peões em frente ao teu Rei sem necessidade.</li>
+                            <li>Liga as torres retirando as peças entre elas.</li>
+                            <li>Identifica qual das tuas peças está pior colocada e melhora-a.</li>
+                        </ul>
+                    </div>
+                    <img src="Imagem/Roque2.jpg" class="rule-img" alt="Continuação estratégica após o roque">
+                </div>
+
+                <div class="rule-card">
+                    <div class="rule-text">
+                        <h3>Promoção e Peão Passado</h3>
+                        <p>Quando um peão chega à última fila, pode promover-se normalmente a Dama. Em muitos finais, todo o jogo gira à volta de criar, apoiar ou travar um peão passado pronto a correr para a promoção.</p>
+                        <ul>
+                            <li>Dama é a promoção mais frequente.</li>
+                            <li>Promover a cavalo ou torre pode ser a melhor escolha em casos táticos especiais.</li>
+                            <li>Reis ativos são decisivos em finais de peões.</li>
+                        </ul>
+                    </div>
+                    <img src="Imagem/promocao.png" class="rule-img" alt="Promoção de peão">
+                </div>
+
+                <div class="diagram-box" style="margin-top: 20px;">
+                    <strong>En Passant</strong>
+                    <p>É a captura especial do peão. Se um peão adversário avançar duas casas de uma vez e ficar lado a lado com o teu peão, podes capturá-lo como se ele tivesse andado apenas uma casa. Esta possibilidade existe apenas no lance imediatamente seguinte.</p>
+                    <p>É uma regra rara, mas importante: evita erros em partidas apertadas e aparece bastante em problemas táticos e em partidas rápidas.</p>
+                </div>
+            </section>
+
+            <section class="learn-section">
+                <h2>Conceitos Táticos Fundamentais</h2>
+                <ul class="tactics-list">
+                    <li>
+                        <strong>1. O Garfo</strong>
+                        <span>Uma peça ataca duas ou mais peças ao mesmo tempo. Cavalos são especialmente perigosos porque atacam de forma difícil de bloquear e conseguem criar forks sobre Rei, Dama e torres em simultâneo.</span>
+                    </li>
+                    <li>
+                        <strong>2. A Cravada</strong>
+                        <span>A peça cravada não pode mexer porque abriria caminho para uma perda ainda maior. Cravadas absolutas envolvem o Rei; cravadas relativas costumam afetar Dama, torre ou uma peça importante.</span>
+                    </li>
+                    <li>
+                        <strong>3. O Espeto</strong>
+                        <span>É o contrário da cravada: atacas primeiro uma peça valiosa à frente e, quando ela se move, capturas a peça menos valiosa que estava atrás. Bispos e torres são excelentes nisso.</span>
+                    </li>
+                    <li>
+                        <strong>4. Ataque Descoberto</strong>
+                        <span>Mover uma peça para revelar o ataque de outra é uma forma poderosa de ganhar material. Se o lance revelado dá xeque, a força tática aumenta ainda mais porque o adversário tem menos respostas legais.</span>
+                    </li>
+                    <li>
+                        <strong>5. Desvio e Atração</strong>
+                        <span>Muitas combinações funcionam por obrigar uma peça defensora a abandonar a casa crítica, ou por atrair o Rei para uma casa vulnerável onde o mate ou o ganho material se tornam inevitáveis.</span>
+                    </li>
+                </ul>
+            </section>
+
+            <section class="learn-section">
+                <h2>Plano de Evolução em Partida</h2>
+                <div class="principles-grid">
+                    <div class="principle-card">
+                        <strong>Abertura</strong>
+                        <span>Desenvolve cavalos e bispos, luta pelo centro e roca cedo. Não saias com a Dama sem razão clara e evita ganhar peões venenosos que te atrasem no desenvolvimento.</span>
+                    </div>
+                    <div class="principle-card">
+                        <strong>Meio-Jogo</strong>
+                        <span>Procura a pior peça do teu lado e melhora-a. Ataca fraquezas fixas: Rei exposto, peão atrasado, casa fraca ou coluna aberta. Joga com um plano, não apenas por jogadas soltas.</span>
+                    </div>
+                    <div class="principle-card">
+                        <strong>Final</strong>
+                        <span>Ativa o Rei, empurra peões passados e coloca a torre atrás do peão passado sempre que possível. No final, cada tempo conta mais do que no meio-jogo.</span>
+                    </div>
+                    <div class="principle-card">
+                        <strong>Lista de Controlo</strong>
+                        <span>Antes de cada lance pergunta: há xeque, captura ou ameaça direta? O adversário deixou uma peça sem defesa? O meu Rei fica seguro depois desta jogada?</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="learn-section">
+                <h2>Hall da Fama - Grandes Mestres</h2>
+
+                <details class="player-item">
+                    <summary>Magnus Carlsen</summary>
+                    <div class="player-content">
+                        <img src="Imagem/Magnus.jpg" class="player-photo" alt="Magnus Carlsen">
+                        <div class="player-bio">
+                            <h4>Sven Magnus Oen Carlsen</h4>
+                            <span class="player-title">Precisão Universal e Finais Implacáveis</span>
+                            <p>Carlsen destacou-se por conseguir vencer posições aparentemente iguais. O seu estilo combina intuição posicional, cálculo prático e uma enorme capacidade para espremer pequenas vantagens até ao ponto de rutura do adversário.</p>
+                            <div class="player-stats">
+                                <div class="stat-box">Ponto Forte<strong>Conversão de finais equilibrados</strong></div>
+                                <div class="stat-box">Marca Histórica<strong>2882 de Elo, recorde absoluto</strong></div>
+                                <div class="stat-box">Lição de Estudo<strong>Valoriza pequenas melhorias de peças</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="player-item">
+                    <summary>Garry Kasparov</summary>
+                    <div class="player-content">
+                        <img src="Imagem/kasparov.jpg" class="player-photo" alt="Garry Kasparov">
+                        <div class="player-bio">
+                            <h4>Garry Kimovich Kasparov</h4>
+                            <span class="player-title">Iniciativa, Energia e Preparação Teórica</span>
+                            <p>Kasparov transformou a forma como muitos jogadores estudavam aberturas. A sua marca foi a iniciativa constante: preferia posições onde pudesse atacar, criar pressão e manter o rival a defender-se sem descanso.</p>
+                            <div class="player-stats">
+                                <div class="stat-box">Estilo<strong>Agressivo e profundamente calculado</strong></div>
+                                <div class="stat-box">Domínio Mundial<strong>Número 1 durante duas décadas</strong></div>
+                                <div class="stat-box">Lição de Estudo<strong>Quem tem a iniciativa joga mais fácil</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="player-item">
+                    <summary>Judit Polgar</summary>
+                    <div class="player-content">
+                        <img src="Imagem/judit.jpg" class="player-photo" alt="Judit Polgar">
+                        <div class="player-bio">
+                            <h4>Judit Polgar</h4>
+                            <span class="player-title">Tática de Elite e Coragem Competitiva</span>
+                            <p>Polgar tornou-se um símbolo de ambição competitiva ao jogar no circuito absoluto e derrotar vários campeões mundiais. As suas partidas mostram coragem, atividade de peças e excelente faro tático.</p>
+                            <div class="player-stats">
+                                <div class="stat-box">Marca Histórica<strong>Mais forte jogadora de sempre</strong></div>
+                                <div class="stat-box">Perfil de Jogo<strong>Iniciativa e tática ofensiva</strong></div>
+                                <div class="stat-box">Lição de Estudo<strong>Ataca quando as tuas peças estão coordenadas</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="player-item">
+                    <summary>Bobby Fischer</summary>
+                    <div class="player-content">
+                        <img src="Imagem/fischer.jpg" class="player-photo" alt="Bobby Fischer">
+                        <div class="player-bio">
+                            <h4>Robert James Fischer</h4>
+                            <span class="player-title">Clareza Técnica e Disciplina Competitiva</span>
+                            <p>Fischer combinou estudo obsessivo, precisão técnica e enorme confiança. As suas partidas são ideais para aprender desenvolvimento harmonioso, exploração de debilidades e como converter vantagem sem confusão desnecessária.</p>
+                            <div class="player-stats">
+                                <div class="stat-box">Legado<strong>Campeão do Mundo em 1972</strong></div>
+                                <div class="stat-box">Assinatura<strong>Técnica limpa e finais fortes</strong></div>
+                                <div class="stat-box">Lição de Estudo<strong>Joga posições simples melhor do que o rival</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+        </div>
+
+        <div id="content-damas" class="tab-content">
+            <section class="learn-section">
+                <div class="hero-panel">
+                    <div>
+                        <h2>Base de Estudo das Damas</h2>
+                        <h3>Leitura rápida, cálculo limpo e controlo das diagonais</h3>
+                        <p>As damas parecem simples ao início, mas exigem visão geométrica, disciplina posicional e muita atenção às capturas obrigatórias. Uma pequena distração pode entregar duas ou três peças de uma vez.</p>
+                        <p>O bom jogador de damas aprende a construir posições onde obriga o rival a capturar de forma desfavorável, fecha casas-chave e coordena as suas pedras para criar sequências de saltos decisivas.</p>
+                        <div class="quick-grid">
+                            <div class="quick-card">
+                                <strong>Objetivo Principal</strong>
+                                <span>Capturar todas as peças adversárias ou bloquear totalmente os movimentos do oponente.</span>
+                            </div>
+                            <div class="quick-card">
+                                <strong>Princípio-Chave</strong>
+                                <span>Quem controla diagonais de entrada e saída cria mais ameaças táticas e menos fraquezas.</span>
+                            </div>
+                            <div class="quick-card">
+                                <strong>Erro Mais Comum</strong>
+                                <span>Avançar peças isoladas e abrir buracos que permitem saltos múltiplos do adversário.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="side-gallery">
+                        <div class="gallery-shot video-embed">
+                            <iframe width="560" height="315" src="https://www.youtube.com/embed/DuFRC3OFRKk?si=avvvuTqeJ76znxlH" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                            <small>Leitura Tática</small>
+                        </div>
+                        <div class="gallery-shot">
+                            <img src="Imagem/promocao.png" alt="Imagem decorativa de promoção">
+                            <small>Promoção e Decisão</small>
+                        </div>
+                    </div>
+
+                    <div class="scribd-embed">
+                        <iframe src="Imagem/livro_dama.pdf"></iframe>
+                    </div>
+                    <div class="book-highlights">
+                        <a href="Imagem/livro_dama.pdf" target="_blank" rel="noopener noreferrer">Abrir livro completo (PDF)</a>
+
+                </div>
+            </section>
+
+            <section class="learn-section">
+                <h2>Desafio Tático: Captura Obrigatória</h2>
+                <p class="moves-hint">Jogas com as peças claras. Uma das tuas peças tem uma captura disponível — nas damas, capturar é sempre obrigatório. Encontra-a.</p>
+                <div class="puzzle-layout">
+                    <div id="puzzleDamasBoard" class="puzzle-checkers-board"></div>
+                    <div class="puzzle-side">
+                        <div class="puzzle-status" id="puzzleDamasStatus">Clica numa peça clara para veres os movimentos dela.</div>
+                        <div class="puzzle-actions">
+                            <button type="button" class="uniform-btn ghost" onclick="puzzleDamasReset()">REINICIAR DESAFIO</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="learn-section">
+                <h2>Regras Essenciais das Damas</h2>
+                <div class="damas-grid">
+                    <div class="damas-card">
+                        <strong>Pedra Normal</strong>
+                        <span>Começa por mover-se uma casa na diagonal para a frente. A sua força depende muito do apoio das pedras vizinhas e do controlo das casas de aterragem.</span>
+                    </div>
+                    <div class="damas-card">
+                        <strong>Captura Obrigatória</strong>
+                        <span>Se existe salto legal, tens de o fazer. Esta regra muda tudo: muitas armadilhas em damas surgem precisamente por forçares uma captura má ao adversário.</span>
+                    </div>
+                    <div class="damas-card">
+                        <strong>Saltos Múltiplos</strong>
+                        <span>Depois da primeira captura, se houver nova captura disponível para a mesma peça, o lance continua. Treina sempre a visualização da sequência completa.</span>
+                    </div>
+                    <div class="damas-card">
+                        <strong>Dama Promovida</strong>
+                        <span>Ao chegar à última fila, a peça promove e passa a dominar mais diagonais. Uma dama ativa pode inverter totalmente uma posição aparentemente perdida.</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="learn-section">
+                <h2>Táticas e Estratégias de Damas</h2>
+                <ul class="tactics-list">
+                    <li>
+                        <strong>1. Armadilha de Isco</strong>
+                        <span>Ofereces uma pedra para conduzir o adversário a uma casa onde ficará vulnerável a um salto duplo ou triplo. A isca só é boa se controlares a casa final onde o rival vai aterrar.</span>
+                    </li>
+                    <li>
+                        <strong>2. Bloqueio Posicional</strong>
+                        <span>Em muitas partidas vence-se sem capturar tudo: basta retirar todas as saídas ao adversário. Fechar diagonais de fuga é um recurso fortíssimo no final.</span>
+                    </li>
+                    <li>
+                        <strong>3. Fixação do Flanco</strong>
+                        <span>Pedras encostadas ao bordo não podem ser saltadas para fora do tabuleiro. Isto torna as laterais úteis para defesa, embora também possam limitar mobilidade se exagerares.</span>
+                    </li>
+                    <li>
+                        <strong>4. Preparação para a Promoção</strong>
+                        <span>Não corras para a última fila sem apoio. O ideal é criar uma corrida em que a tua peça promove com segurança ou obriga o adversário a sacrificar material para a travar.</span>
+                    </li>
+                    <li>
+                        <strong>5. Cálculo Reverso</strong>
+                        <span>Nas damas é muito útil calcular de trás para a frente: vê primeiro onde queres que a tua peça acabe e depois identifica as capturas obrigatórias que conduzem até lá.</span>
+                    </li>
+                </ul>
+            </section>
+
+            <section class="learn-section">
+                <h2>Plano de Treino para Damas</h2>
+                <div class="training-grid">
+                    <div class="training-card">
+                        <strong>Treino 1: Contagem de Capturas</strong>
+                        <span>Antes de mexeres, procura todas as capturas legais de ambos os lados. Este hábito reduz erros graves e melhora muito a visão tática.</span>
+                    </div>
+                    <div class="training-card">
+                        <strong>Treino 2: Estrutura Compacta</strong>
+                        <span>Evita deixar pedras sem apoio. Estruturas compactas fazem o adversário trabalhar mais para criar saltos limpos.</span>
+                    </div>
+                    <div class="training-card">
+                        <strong>Treino 3: Final com Poucas Peças</strong>
+                        <span>Finais de 3 para 3 ou 4 para 4 ensinam bloqueio, promoção e controlo do ritmo. É aqui que a técnica realmente aparece.</span>
+                    </div>
+                    <div class="training-card">
+                        <strong>Treino 4: Visualização</strong>
+                        <span>Tenta prever duas jogadas completas sem mexer no tabuleiro. Em damas, visualizar a sequência de saltos é mais valioso do que decorar padrões soltos.</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="learn-section">
+                <h2>Referências Históricas das Damas</h2>
+                <!-- Imagens decorativas removidas conforme pedido -->
+
+                <details class="player-item">
+                    <summary>Marion Tinsley</summary>
+                    <div class="player-content">
+                        <img src="Imagem/Tinsley.jpg" class="player-photo" alt="Marion Tinsley" />
+                        <div class="player-bio">
+                            <h4>Marion Tinsley</h4>
+                            <span class="player-title">Precisão quase perfeita</span>
+                            <p>Tinsley é frequentemente tratado como o maior jogador de damas de sempre. O seu jogo era incrivelmente limpo, com uma capacidade extraordinária para evitar erros e transformar pequenas vantagens em vitórias técnicas.</p>
+                            <div class="player-stats">
+                                <div class="stat-box">Marca Histórica<strong>Décadas ao mais alto nível</strong></div>
+                                <div class="stat-box">Fama Competitiva<strong>Quase invencível em jogo sério</strong></div>
+                                <div class="stat-box">Lição de Estudo<strong>Precisão simples vale mais do que bravura vazia</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="player-item">
+                    <summary>Alex Moiseyev</summary>
+                    <div class="player-content">
+                        <img src="Imagem/alex_moiseyev.jpg" class="player-photo" alt="Alex Moiseyev" />
+                        <div class="player-bio">
+                            <h4>Alex Moiseyev</h4>
+                            <span class="player-title">Mestre da estratégia moderna</span>
+                            <p>Alex Moiseyev é conhecido por combinar planos profundos e habilidade técnica. Foi campeão mundial várias vezes e popularizou formas de jogar que valorizam o controlo do centro e a gestão de finais.</p>
+                            <div class="player-stats">
+                                <div class="stat-box">Títulos<strong>Várias vezes campeão mundial</strong></div>
+                                <div class="stat-box">Estilo<strong>Planeamento posicional</strong></div>
+                                <div class="stat-box">Lição de Estudo<strong>Controla o centro antes de procurar capturas</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+        </div>
+
+        <a href="jogar.html" class="btn-ready uniform-btn">Começar Jogo</a>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 TABULEIRO DINÂMICO | Todos os direitos reservados</p>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script>
+        function switchGameTab(mode) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (mode === 'xadrez') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('content-xadrez').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('content-damas').classList.add('active');
+            }
+        }
+
+        // ===== Desafio tático: Mate em 1 (xadrez) =====
+        const puzzleChessFens = [
+            { fen: '6k1/5ppp/8/8/8/8/8/4R1K1 w - - 0 1', dica: 'A Torre consegue chegar à oitava fila sem ser capturada — repara nos peões pretos que fecham a fuga do rei.' },
+            { fen: '6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1', dica: 'Mesma ideia: leva a Torre até à última fila para dar xeque-mate ao corredor.' },
+            { fen: '6k1/5ppp/8/8/8/8/8/Q5K1 w - - 0 1', dica: 'A Dama também consegue este mate — chega à oitava fila em segurança.' }
+        ];
+        let puzzleChessIndex = 0;
+        let puzzleChessGame = null;
+        let puzzleChessBoardInstance = null;
+        let puzzleChessSolved = false;
+
+        function puzzleChessSetStatus(text, kind) {
+            const el = document.getElementById('puzzleChessStatus');
+            if (!el) return;
+            el.textContent = text;
+            el.className = 'puzzle-status' + (kind ? ' ' + kind : '');
+        }
+
+        function puzzleChessLoad(index) {
+            puzzleChessIndex = ((index % puzzleChessFens.length) + puzzleChessFens.length) % puzzleChessFens.length;
+            puzzleChessSolved = false;
+            const config = puzzleChessFens[puzzleChessIndex];
+            puzzleChessGame = new Chess(config.fen);
+
+            const hintEl = document.getElementById('puzzleChessHintText');
+            hintEl.style.display = 'none';
+            hintEl.textContent = config.dica;
+            puzzleChessSetStatus('Desafio ' + (puzzleChessIndex + 1) + ' de ' + puzzleChessFens.length + ' — encontra o mate em 1 jogada.');
+
+            if (puzzleChessBoardInstance) puzzleChessBoardInstance.destroy();
+            puzzleChessBoardInstance = Chessboard('puzzleChessBoard', {
+                draggable: true,
+                position: config.fen,
+                pieceTheme: 'https://lichess1.org/assets/_6S69X6/piece/cburnett/{piece}.svg',
+                onDrop: puzzleChessOnDrop
+            });
+        }
+
+        function puzzleChessOnDrop(source, target) {
+            if (puzzleChessSolved) return 'snapback';
+            const move = puzzleChessGame.move({ from: source, to: target, promotion: 'q' });
+            if (move === null) return 'snapback';
+
+            if (puzzleChessGame.in_checkmate()) {
+                puzzleChessSolved = true;
+                puzzleChessSetStatus('Muito bem! Isso é xeque-mate. Desafio resolvido.', 'success');
+            } else {
+                puzzleChessGame.undo();
+                puzzleChessSetStatus('Ainda não é xeque-mate. Tenta outra jogada.', 'error');
+                return 'snapback';
+            }
+        }
+
+        function puzzleChessToggleHint() {
+            const el = document.getElementById('puzzleChessHintText');
+            if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function puzzleChessReset() { puzzleChessLoad(puzzleChessIndex); }
+        function puzzleChessNext() { puzzleChessLoad(puzzleChessIndex + 1); }
+
+        // ===== Desafio tático: Captura obrigatória (damas) =====
+        // Tabuleiro e regras próprias deste desafio, independentes do jogo em jogar.html
+        const puzzleDamasInitialState = [
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0, 0],
+            [0, 0, 2, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 2, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0]
+        ];
+        let puzzleDamasState = [];
+        let puzzleDamasSelected = null;
+        let puzzleDamasMoves = [];
+        let puzzleDamasDone = false;
+
+        function puzzleDamasClone(state) { return state.map((row) => row.slice()); }
+
+        function puzzleDamasGetMoves(state, r, c) {
+            const moves = [];
+            const val = state[r][c];
+            if (!val) return moves;
+            const direcoes = val === 1 ? [1] : [-1];
+
+            direcoes.forEach((dr) => {
+                [-1, 1].forEach((dc) => {
+                    const nr = r + dr, nc = c + dc;
+                    if (nr < 0 || nr > 7 || nc < 0 || nc > 7) return;
+
+                    if (state[nr][nc] === 0) {
+                        moves.push({ r: nr, c: nc });
+                    } else {
+                        const inimigo = state[nr][nc];
+                        if (inimigo !== val) {
+                            const nnr = nr + dr, nnc = nc + dc;
+                            if (nnr >= 0 && nnr <= 7 && nnc >= 0 && nnc <= 7 && state[nnr][nnc] === 0) {
+                                moves.push({ r: nnr, c: nnc, captura: { r: nr, c: nc } });
+                            }
+                        }
+                    }
+                });
+            });
+            return moves;
+        }
+
+        function puzzleDamasSideHasCapture(state, side) {
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (state[r][c] === side && puzzleDamasGetMoves(state, r, c).some((m) => m.captura)) return true;
+                }
+            }
+            return false;
+        }
+
+        function puzzleDamasSetStatus(text, kind) {
+            const el = document.getElementById('puzzleDamasStatus');
+            if (!el) return;
+            el.textContent = text;
+            el.className = 'puzzle-status' + (kind ? ' ' + kind : '');
+        }
+
+        function puzzleDamasRender() {
+            const board = document.getElementById('puzzleDamasBoard');
+            if (!board) return;
+            board.innerHTML = '';
+            const highlights = puzzleDamasSelected ? puzzleDamasMoves : [];
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.createElement('div');
+                    square.className = 'puzzle-d-square ' + ((r + c) % 2 === 0 ? 'light' : 'dark');
+                    if (highlights.some((m) => m.r === r && m.c === c)) {
+                        square.classList.add('highlight');
+                    }
+                    square.addEventListener('click', () => puzzleDamasHandleClick(r, c));
+
+                    const val = puzzleDamasState[r][c];
+                    if (val) {
+                        const piece = document.createElement('div');
+                        piece.className = 'puzzle-d-piece ' + (val === 1 ? 'puzzle-d-black' : 'puzzle-d-white');
+                        if (puzzleDamasSelected && puzzleDamasSelected.r === r && puzzleDamasSelected.c === c) {
+                            piece.classList.add('puzzle-d-selected');
+                        }
+                        square.appendChild(piece);
+                    }
+                    board.appendChild(square);
+                }
+            }
+        }
+
+        function puzzleDamasHandleClick(r, c) {
+            if (puzzleDamasDone) return;
+            const val = puzzleDamasState[r][c];
+
+            if (val === 2) {
+                puzzleDamasSelected = { r, c };
+                puzzleDamasMoves = puzzleDamasGetMoves(puzzleDamasState, r, c);
+                puzzleDamasSetStatus('Peça selecionada. Clica num ponto verde para jogares.');
+                puzzleDamasRender();
+                return;
+            }
+
+            if (puzzleDamasSelected) {
+                const move = puzzleDamasMoves.find((m) => m.r === r && m.c === c);
+                if (!move) return;
+
+                const capturaDisponivel = puzzleDamasSideHasCapture(puzzleDamasState, 2);
+
+                if (capturaDisponivel && !move.captura) {
+                    puzzleDamasSetStatus('Essa jogada não é permitida — havia uma captura obrigatória disponível. Tenta novamente.', 'error');
+                    puzzleDamasSelected = null;
+                    puzzleDamasMoves = [];
+                    puzzleDamasRender();
+                    return;
+                }
+
+                const novoEstado = puzzleDamasClone(puzzleDamasState);
+                novoEstado[r][c] = novoEstado[puzzleDamasSelected.r][puzzleDamasSelected.c];
+                novoEstado[puzzleDamasSelected.r][puzzleDamasSelected.c] = 0;
+                if (move.captura) novoEstado[move.captura.r][move.captura.c] = 0;
+
+                puzzleDamasState = novoEstado;
+                puzzleDamasSelected = null;
+                puzzleDamasMoves = [];
+
+                if (move.captura) {
+                    puzzleDamasDone = true;
+                    puzzleDamasSetStatus('Exato! Essa era a captura obrigatória. Desafio resolvido.', 'success');
+                } else {
+                    puzzleDamasSetStatus('Jogada válida, mas este desafio é sobre encontrar a captura obrigatória. Reinicia para tentar de novo.', 'error');
+                }
+                puzzleDamasRender();
+            }
+        }
+
+        function puzzleDamasReset() {
+            puzzleDamasState = puzzleDamasClone(puzzleDamasInitialState);
+            puzzleDamasSelected = null;
+            puzzleDamasMoves = [];
+            puzzleDamasDone = false;
+            puzzleDamasSetStatus('Clica numa peça clara para veres os movimentos dela.');
+            puzzleDamasRender();
+        }
+
+        puzzleChessLoad(0);
+        puzzleDamasReset();
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TABULEIRO DINÂMICO - INÍCIO</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.85em%22 font-size=%2280%22 font-family=%22Georgia,serif%22>♟</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/navbar-session.js"></script>
+    <script src="js/theme-toggle.js"></script>
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/light-mode-fixes.css">
+    <link rel="stylesheet" href="css/buttons.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo"><span>♟</span> TABULEIRO DINÂMICO</a>
+        <div class="nav-right">
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Início</a></li>
+                <li><a href="aprende.html">Aprender</a></li>
+                <li><a href="jogar.html">Jogar</a></li>
+            </ul>
+            <div class="nav-auth">
+                <div id="navGuestActions">
+                    <a href="entrar.html" class="btn-auth-nav uniform-btn ghost">Entrar</a>
+                </div>
+                <div id="navUserActions" class="nav-user-actions" style="display: none;">
+                    <span id="navUserLabel" class="nav-user-label">Conta ativa</span>
+                    <a href="entrar.html" class="account-link primary">Gerir Conta</a>
+                    <button onclick="handleLogout()" class="logout-small">Sair</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="knight-bg"></div>
+        
+        <div class="hero-container">
+            <div class="hero-card">
+                <h1>Aprende e Testa os <br><span style="color: var(--accent-blue);">teus Limites.</span></h1>
+                <p>
+                    Enfrenta os maiores desafios, aprimora a tua tática e descobre até onde a tua mente te pode levar. O próximo grande movimento é teu.
+                </p>
+                
+                <div class="hero-btns">
+                    <a href="jogar.html" class="btn-primary uniform-btn">Começar Agora</a>
+                    <a href="aprende.html" class="btn-secondary uniform-btn secondary">Aprender Regras</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="sobre" class="section-about">
+        <div class="about-grid">
+            <div class="about-card">
+                <div style="font-size: 3.5rem;">♚</div>
+                <h3>Estratégia IA</h3>
+                <p>Testa o teu raciocínio contra uma Inteligência Artificial dinâmica com 5 níveis de dificuldade ajustáveis.</p>
+            </div>
+
+            <div class="about-card">
+                <div style="font-size: 3.5rem; color: var(--accent-blue);">♞</div>
+                <h3>Evolução</h3>
+                <p>Design moderno e imersivo focado na aprendizagem das táticas fundamentais do jogo clássico.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>&copy; 2026 TABULEIRO DINÂMICO | Todos os direitos reservados</p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,567 @@
+﻿<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENTRAR - TABULEIRO DINÂMICO</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.85em%22 font-size=%2280%22 font-family=%22Georgia,serif%22>♟</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/theme-toggle.js"></script>
+    <link rel="stylesheet" href="css/entrar.css">
+    <link rel="stylesheet" href="css/light-mode-fixes.css">
+    <link rel="stylesheet" href="css/buttons.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo"><span>♟</span> Tabuleiro Dinâmico</a>
+        <div class="nav-right">
+            <ul class="nav-links">
+                <li><a href="index.html">Início</a></li>
+                <li><a href="aprende.html">Aprender</a></li>
+                <li><a href="jogar.html">Jogar</a></li>
+            </ul>
+            <div class="nav-auth">
+                <div id="navGuestActions">
+                    <a href="entrar.html" class="btn-auth-nav uniform-btn ghost">Entrar</a>
+                </div>
+                <div id="navUserActions" class="nav-user-actions" style="display: none;">
+                    <span id="navUserLabel" class="nav-user-label">Conta ativa</span>
+                    <a href="entrar.html" class="account-link primary">Gerir Conta</a>
+                    <button onclick="handleLogout()" class="logout-small">Sair</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="auth-page">
+        <section class="auth-card">
+            <h1 id="pageTitle">Entrar na tua conta</h1>
+            <p id="pageSubtitle">Acede ao teu perfil para guardares partidas e continuares a jogar sem perder o teu progresso.</p>
+
+            <div id="modeSwitcher" class="switcher">
+                <button id="tabLogin" type="button" onclick="setMode('login')">Entrar</button>
+                <button id="tabRegister" type="button" onclick="setMode('register')">Criar Conta</button>
+            </div>
+
+            <div id="authNotice" class="notice info hidden"></div>
+
+            <form id="loginForm">
+                <div>
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="teuemail@exemplo.com" required>
+                </div>
+                <div>
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="A tua password" required>
+                </div>
+                <button type="submit" class="submit-btn">Entrar</button>
+                <p class="helper">Ainda nao tens conta? <a href="entrar.html?modo=registar">Cria a tua conta aqui</a>.</p>
+            </form>
+
+            <form id="registerForm" class="hidden">
+                <div>
+                    <label for="registerUsername">Nome de Utilizador</label>
+                    <input type="text" id="registerUsername" placeholder="Escolhe o teu nome de utilizador" minlength="3" maxlength="20" autocomplete="username" required>
+                </div>
+                <div>
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" placeholder="teuemail@exemplo.com" required>
+                </div>
+                <div>
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" placeholder="Cria uma password" required>
+                </div>
+                <div>
+                    <label for="registerConfirmPassword">Confirmar Password</label>
+                    <input type="password" id="registerConfirmPassword" placeholder="Repete a password" required>
+                </div>
+                <button type="submit" class="submit-btn">Criar Conta</button>
+                <p class="helper">Ja tens conta? <a href="entrar.html">Entra aqui</a>.</p>
+            </form>
+
+            <div id="sessionBox" class="session-box hidden">
+                <strong id="sessionEmail">Sessao ativa.</strong>
+                <p id="sessionText">Aqui podes gerir a tua conta, consultar o historico e atualizar a tua password.</p>
+                <div class="session-actions">
+                    <a href="jogar.html" class="submit-btn" style="text-decoration:none;text-align:center;">Ir para Jogar</a>
+                    <button type="button" class="secondary-btn danger-btn" onclick="handleLogout()">Sair da Conta</button>
+                </div>
+
+                <section class="account-panel stats-panel">
+                    <h2>Estatísticas</h2>
+                    <p>Resumo do teu desempenho nas partidas guardadas.</p>
+                    <div class="stats-grid">
+                        <div class="stat-box"><strong id="statTotal">0</strong><span>Partidas</span></div>
+                        <div class="stat-box"><strong id="statWins">0</strong><span>Vitórias</span></div>
+                        <div class="stat-box"><strong id="statLosses">0</strong><span>Derrotas</span></div>
+                        <div class="stat-box"><strong id="statDraws">0</strong><span>Empates</span></div>
+                        <div class="stat-box"><strong id="statWinRate">0%</strong><span>Taxa de Vitória</span></div>
+                    </div>
+                </section>
+
+                <div class="account-grid">
+                    <section class="account-panel">
+                        <h2>Mudar Palavra-Passe</h2>
+                        <p>Define uma nova palavra-passe para proteger a tua conta.</p>
+                        <form id="passwordForm" class="account-form">
+                            <div>
+                                <label for="newPassword">Nova Palavra-Passe</label>
+                                <input type="password" id="newPassword" placeholder="Introduz a nova palavra-passe" required>
+                            </div>
+                            <div>
+                                <label for="confirmNewPassword">Confirmar Palavra-Passe</label>
+                                <input type="password" id="confirmNewPassword" placeholder="Repete a nova palavra-passe" required>
+                            </div>
+                            <button type="submit" class="submit-btn">Atualizar Palavra-Passe</button>
+                        </form>
+                    </section>
+
+                    <section class="account-panel">
+                        <div class="history-header">
+                            <h2>Histórico de Partidas</h2>
+                            <button id="refreshHistoryBtn" type="button" class="history-refresh" onclick="carregarHistoricoPartidas()">Atualizar</button>
+                        </div>
+                        <p>Consulta as tuas partidas mais recentes guardadas na conta.</p>
+                        <div id="accountHistoryList" class="history-list">
+                            <div class="history-empty">O histórico vai aparecer aqui quando iniciares sessão.</div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </section>
+
+        <section class="auth-card leaderboard-card">
+            <h1 style="font-size: 1.6rem;">Ranking Global</h1>
+            <p>As contas com mais vitórias registadas no site.</p>
+            <div id="leaderboardList" class="leaderboard-list">
+                <div class="history-empty">A carregar o ranking...</div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const SUPABASE_URL = window.APP_SUPABASE?.url;
+        const SUPABASE_KEY = window.APP_SUPABASE?.publishableKey;
+
+        let supabaseClient = null;
+        try {
+            if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+        } catch (e) {
+            console.error('Erro ao inicializar o Supabase:', e);
+        }
+
+        const pageTitle = document.getElementById('pageTitle');
+        const pageSubtitle = document.getElementById('pageSubtitle');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const passwordForm = document.getElementById('passwordForm');
+        const authNotice = document.getElementById('authNotice');
+        const tabLogin = document.getElementById('tabLogin');
+        const tabRegister = document.getElementById('tabRegister');
+        const modeSwitcher = document.getElementById('modeSwitcher');
+        const navGuestActions = document.getElementById('navGuestActions');
+        const navUserActions = document.getElementById('navUserActions');
+        const navUserLabel = document.getElementById('navUserLabel');
+        const sessionBox = document.getElementById('sessionBox');
+        const sessionEmail = document.getElementById('sessionEmail');
+        const accountHistoryList = document.getElementById('accountHistoryList');
+        const refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
+        let utilizadorAtual = null;
+
+        function obterDataPartida(partida) {
+            return partida.created_at || partida.data_partida || partida.data_criacao || partida.inserted_at || null;
+        }
+
+        function formatarDataPartida(valorData) {
+            if (!valorData) return 'Data indisponível';
+            const data = new Date(valorData);
+            if (Number.isNaN(data.getTime())) return 'Data indisponível';
+            const dataTexto = new Intl.DateTimeFormat('pt-PT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            }).format(data);
+            const horaTexto = new Intl.DateTimeFormat('pt-PT', {
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(data);
+            return `${dataTexto} às ${horaTexto}`;
+        }
+
+        function calcularEstatisticas(partidas) {
+            let vitorias = 0, derrotas = 0, empates = 0;
+
+            (partidas || []).forEach((partida) => {
+                const r = (partida.resultado || '').toLowerCase();
+                if (r.includes('reiniciada')) return;
+                if (r.includes('empate')) { empates++; return; }
+                if (r.includes('vitória das brancas') || r.includes('vitoria das brancas')) { vitorias++; return; }
+                if (r.includes('vitória das pretas') || r.includes('vitoria das pretas')) { derrotas++; return; }
+            });
+
+            const total = vitorias + derrotas + empates;
+            const taxa = total > 0 ? Math.round((vitorias / total) * 100) : 0;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statWins').textContent = vitorias;
+            document.getElementById('statLosses').textContent = derrotas;
+            document.getElementById('statDraws').textContent = empates;
+            document.getElementById('statWinRate').textContent = taxa + '%';
+        }
+
+        function renderHistoricoPartidas(partidas, mensagem) {
+            refreshHistoryBtn.disabled = !utilizadorAtual || !supabaseClient;
+
+            if (mensagem) {
+                accountHistoryList.innerHTML = '<div class="history-empty">' + mensagem + '</div>';
+                return;
+            }
+
+            if (!partidas || !partidas.length) {
+                accountHistoryList.innerHTML = '<div class="history-empty">Ainda não tens partidas registadas. Joga algumas partidas para começares a preencher o teu histórico.</div>';
+                return;
+            }
+
+            accountHistoryList.innerHTML = partidas.map((partida) => {
+                const modalidade = (partida.modalidade || 'partida').toLowerCase();
+                const etiquetaModalidade = modalidade === 'damas' ? 'Damas' : 'Xadrez';
+                const resultado = partida.resultado || 'Resultado indisponível';
+                const dataFormatada = formatarDataPartida(obterDataPartida(partida));
+
+                return `
+                    <article class="history-item">
+                        <div class="history-topline">
+                            <span class="history-badge ${modalidade === 'damas' ? 'damas' : 'xadrez'}">${etiquetaModalidade}</span>
+                            <span class="history-result">${resultado}</span>
+                        </div>
+                        <div class="history-meta">${dataFormatada}</div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        async function carregarHistoricoPartidas() {
+            if (!utilizadorAtual || !supabaseClient) {
+                renderHistoricoPartidas([], 'O histórico vai aparecer aqui quando iniciares sessão.');
+                calcularEstatisticas([]);
+                return;
+            }
+
+            refreshHistoryBtn.disabled = true;
+            renderHistoricoPartidas([], 'A carregar o teu histórico...');
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('partidas')
+                    .select('*')
+                    .eq('user_id', utilizadorAtual.id)
+                    .limit(200);
+
+                if (error) {
+                    renderHistoricoPartidas([], 'Não foi possível carregar o histórico neste momento.');
+                    calcularEstatisticas([]);
+                    return;
+                }
+
+                const partidasOrdenadas = (data || []).sort((a, b) => {
+                    const dataA = new Date(obterDataPartida(a) || 0).getTime();
+                    const dataB = new Date(obterDataPartida(b) || 0).getTime();
+
+                    if (!Number.isNaN(dataA) && !Number.isNaN(dataB) && dataA !== dataB) {
+                        return dataB - dataA;
+                    }
+
+                    const idA = Number(a.id) || 0;
+                    const idB = Number(b.id) || 0;
+                    return idB - idA;
+                });
+
+                calcularEstatisticas(partidasOrdenadas);
+                renderHistoricoPartidas(partidasOrdenadas.slice(0, 12));
+            } catch (e) {
+                renderHistoricoPartidas([], 'Ocorreu um erro inesperado ao consultar o histórico.');
+                calcularEstatisticas([]);
+            } finally {
+                refreshHistoryBtn.disabled = !utilizadorAtual || !supabaseClient;
+            }
+        }
+
+        function showNotice(message, type) {
+            authNotice.textContent = message;
+            authNotice.className = 'notice ' + type;
+        }
+
+        function hideNotice() {
+            authNotice.className = 'notice info hidden';
+            authNotice.textContent = '';
+        }
+
+        function setMode(mode) {
+            const isRegister = mode === 'register';
+            loginForm.classList.toggle('hidden', isRegister);
+            registerForm.classList.toggle('hidden', !isRegister);
+            tabLogin.classList.toggle('active', !isRegister);
+            tabRegister.classList.toggle('active', isRegister);
+
+            if (isRegister) {
+                pageTitle.textContent = 'Criar nova conta';
+                pageSubtitle.textContent = 'Regista-te com nome de utilizador, email e password para guardares o historico das tuas partidas.';
+                history.replaceState({}, '', 'entrar.html?modo=registar');
+            } else {
+                pageTitle.textContent = 'Entrar na tua conta';
+                pageSubtitle.textContent = 'Acede ao teu perfil para guardares partidas e continuares a jogar sem perder o teu progresso.';
+                history.replaceState({}, '', 'entrar.html');
+            }
+
+            hideNotice();
+        }
+
+        function obterNomeApresentacao(user) {
+            return user?.user_metadata?.username || user?.user_metadata?.display_name || user?.email || 'Utilizador';
+        }
+
+        function showSession(user) {
+            pageTitle.textContent = 'Gerir Conta';
+            pageSubtitle.textContent = 'Consulta o teu histórico, muda a palavra-passe ou termina a sessão quando precisares.';
+            sessionEmail.textContent = 'Sessao ativa: ' + obterNomeApresentacao(user);
+            navGuestActions.style.display = 'none';
+            navUserActions.style.display = 'flex';
+            navUserLabel.innerText = obterNomeApresentacao(user);
+            sessionBox.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+            registerForm.classList.add('hidden');
+            modeSwitcher.classList.add('hidden');
+            tabLogin.classList.remove('active');
+            tabRegister.classList.remove('active');
+            carregarHistoricoPartidas();
+        }
+
+        function hideSession() {
+            utilizadorAtual = null;
+            navGuestActions.style.display = 'block';
+            navUserActions.style.display = 'none';
+            sessionBox.classList.add('hidden');
+            modeSwitcher.classList.remove('hidden');
+            passwordForm.reset();
+            renderHistoricoPartidas([], 'O histórico vai aparecer aqui quando iniciares sessão.');
+            calcularEstatisticas([]);
+            const initialMode = new URLSearchParams(window.location.search).get('modo') === 'registar' ? 'register' : 'login';
+            setMode(initialMode);
+        }
+
+        async function verificarSessao() {
+            if (!supabaseClient) {
+                showNotice('A ligacao ao sistema de autenticacao nao esta disponivel.', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.auth.getSession();
+                if (error) {
+                    hideSession();
+                    return;
+                }
+
+                const user = data && data.session ? data.session.user : null;
+                if (user) {
+                    utilizadorAtual = user;
+                    showSession(user);
+                } else {
+                    hideSession();
+                }
+            } catch (e) {
+                hideSession();
+            }
+        }
+
+        async function handleLogout() {
+            if (!supabaseClient) return;
+            await supabaseClient.auth.signOut();
+            hideSession();
+            showNotice('Sessao terminada com sucesso.', 'success');
+        }
+
+        loginForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            hideNotice();
+
+            if (!supabaseClient) {
+                showNotice('Erro: ligacao ao Supabase indisponivel.', 'error');
+                return;
+            }
+
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                showNotice('Preenche todos os campos para entrar.', 'error');
+                return;
+            }
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                showNotice('Erro no login: ' + error.message, 'error');
+                return;
+            }
+
+            utilizadorAtual = data.user;
+            showNotice('Login efetuado com sucesso. Já podes gerir a tua conta.', 'success');
+            showSession(data.user);
+        });
+
+        registerForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            hideNotice();
+
+            if (!supabaseClient) {
+                showNotice('Erro: ligacao ao Supabase indisponivel.', 'error');
+                return;
+            }
+
+            const username = document.getElementById('registerUsername').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+
+            if (!username || !email || !password || !confirmPassword) {
+                showNotice('Preenche nome de utilizador, email e password para criar a conta.', 'error');
+                return;
+            }
+
+            const usernameNormalizado = username.replace(/\s+/g, ' ').trim();
+            if (usernameNormalizado.length < 3) {
+                showNotice('O nome de utilizador deve ter pelo menos 3 caracteres.', 'error');
+                return;
+            }
+
+            if (usernameNormalizado.length > 20) {
+                showNotice('O nome de utilizador pode ter no maximo 20 caracteres.', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showNotice('As passwords nao coincidem.', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showNotice('A password deve ter pelo menos 6 caracteres.', 'error');
+                return;
+            }
+
+            const { error } = await supabaseClient.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        username: usernameNormalizado,
+                        display_name: usernameNormalizado
+                    }
+                }
+            });
+
+            if (error) {
+                showNotice('Erro ao criar conta: ' + error.message, 'error');
+                return;
+            }
+
+            document.getElementById('loginEmail').value = email;
+            document.getElementById('loginPassword').value = '';
+            registerForm.reset();
+            setMode('login');
+            showNotice('Conta criada com sucesso. O nome de utilizador foi associado ao teu perfil. Se necessario, confirma o teu email antes de entrares.', 'success');
+        });
+
+        passwordForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            hideNotice();
+
+            if (!supabaseClient || !utilizadorAtual) {
+                showNotice('Precisas de ter uma sessão iniciada para mudar a palavra-passe.', 'error');
+                return;
+            }
+
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+            if (!newPassword || !confirmNewPassword) {
+                showNotice('Preenche os dois campos da nova palavra-passe.', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmNewPassword) {
+                showNotice('As novas passwords nao coincidem.', 'error');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showNotice('A nova password deve ter pelo menos 6 caracteres.', 'error');
+                return;
+            }
+
+            const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+
+            if (error) {
+                showNotice('Erro ao atualizar a palavra-passe: ' + error.message, 'error');
+                return;
+            }
+
+            passwordForm.reset();
+            showNotice('Palavra-passe atualizada com sucesso.', 'success');
+        });
+
+        function escapeHtml(valor) {
+            return String(valor).replace(/[&<>"']/g, function (ch) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+            });
+        }
+
+        async function carregarRanking() {
+            const el = document.getElementById('leaderboardList');
+            if (!el) return;
+
+            if (!supabaseClient) {
+                el.innerHTML = '<div class="history-empty">Ranking indisponível de momento.</div>';
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('leaderboard')
+                    .select('*')
+                    .order('vitorias', { ascending: false })
+                    .limit(10);
+
+                if (error || !data || !data.length) {
+                    el.innerHTML = '<div class="history-empty">Ainda não há dados suficientes para o ranking. Joga algumas partidas com sessão iniciada para apareceres aqui.</div>';
+                    return;
+                }
+
+                el.innerHTML = data.map(function (linha, indice) {
+                    const nome = escapeHtml(linha.username || 'Utilizador');
+                    return '' +
+                        '<div class="leaderboard-item">' +
+                            '<span class="leaderboard-rank">#' + (indice + 1) + '</span>' +
+                            '<span class="leaderboard-name">' + nome + '</span>' +
+                            '<span class="leaderboard-score">' + linha.vitorias + ' V · ' + linha.derrotas + ' D · ' + linha.empates + ' E</span>' +
+                        '</div>';
+                }).join('');
+            } catch (e) {
+                el.innerHTML = '<div class="history-empty">Ranking indisponível de momento.</div>';
+            }
+        }
+
+        window.onload = function () {
+            const initialMode = new URLSearchParams(window.location.search).get('modo') === 'registar' ? 'register' : 'login';
+            setMode(initialMode);
+            verificarSessao();
+            carregarRanking();
+        };
+    </script>
+</body>
+</html>

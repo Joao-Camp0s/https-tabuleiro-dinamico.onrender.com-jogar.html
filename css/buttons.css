@@ -1,0 +1,255 @@
+/* Estilo base unificado: mesma forma e tipografia em todos os botões do site.
+   As cores continuam a variar consoante a função de cada botão. */
+.btn-primary,
+.btn-secondary,
+.btn-play-nav,
+.btn-auth-nav,
+.btn-create-nav,
+.uniform-btn,
+.btn-action,
+.btn-ready,
+.submit-btn,
+.secondary-btn,
+.danger-btn,
+.tab-btn,
+.switcher button,
+.history-refresh,
+.account-link,
+.logout-small,
+.nav-links a {
+    border-radius: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+/* botões "fantasma" (Entrar, etc.) com o mesmo tratamento neutro dos outros botões secundários */
+.btn-auth-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+/* links simples da navbar (Início, Aprender, Jogar) ganham a mesma "caixa" que os botões com cor */
+.nav-links a {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.nav-links a:hover {
+    border-color: rgba(52, 152, 219, 0.4);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.nav-links a.active {
+    border-color: var(--accent-blue, #3498db);
+    background: rgba(52, 152, 219, 0.14);
+}
+
+body.light-mode .nav-links a {
+    border-color: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.03);
+}
+
+body.light-mode .nav-links a:hover {
+    border-color: rgba(52, 152, 219, 0.35);
+    background: rgba(52, 152, 219, 0.08);
+}
+
+body.light-mode .nav-links a.active {
+    border-color: var(--accent-blue, #3498db);
+    background: rgba(52, 152, 219, 0.12);
+}
+
+/* botão de alternar tema: mesma linguagem visual e animações dos restantes botões */
+.theme-toggle {
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+}
+
+.theme-toggle:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--accent-blue, #3498db);
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .theme-toggle {
+        transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .theme-toggle:hover {
+        transform: none;
+        box-shadow: none;
+    }
+}
+
+/* elevação simples ao passar o rato */
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-play-nav:hover,
+.btn-auth-nav:hover,
+.btn-create-nav:hover,
+.uniform-btn:hover,
+.btn-action:hover:not(:disabled),
+.btn-ready:hover,
+.submit-btn:hover,
+.secondary-btn:hover,
+.danger-btn:hover,
+.tab-btn:hover,
+.switcher button:hover,
+.history-refresh:hover:not(:disabled),
+.account-link:hover,
+.logout-small:hover,
+.nav-links a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+}
+
+/* efeito de "afundar" ao clicar */
+.btn-primary:active,
+.btn-secondary:active,
+.btn-play-nav:active,
+.btn-auth-nav:active,
+.btn-create-nav:active,
+.uniform-btn:active,
+.btn-action:active:not(:disabled),
+.btn-ready:active,
+.submit-btn:active,
+.secondary-btn:active,
+.danger-btn:active,
+.tab-btn:active,
+.switcher button:active,
+.history-refresh:active:not(:disabled),
+.account-link:active,
+.logout-small:active,
+.nav-links a:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+/* contorno de foco acessível, sem mexer no layout */
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-play-nav:focus-visible,
+.btn-auth-nav:focus-visible,
+.btn-create-nav:focus-visible,
+.uniform-btn:focus-visible,
+.btn-action:focus-visible,
+.btn-ready:focus-visible,
+.submit-btn:focus-visible,
+.secondary-btn:focus-visible,
+.danger-btn:focus-visible,
+.tab-btn:focus-visible,
+.switcher button:focus-visible,
+.history-refresh:focus-visible,
+.account-link:focus-visible,
+.nav-links a:focus-visible {
+    outline: 2px solid var(--accent-blue, #3498db);
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn-primary,
+    .btn-secondary,
+    .btn-play-nav,
+    .btn-auth-nav,
+    .btn-create-nav,
+    .uniform-btn,
+    .btn-action,
+    .btn-ready,
+    .submit-btn,
+    .secondary-btn,
+    .danger-btn,
+    .tab-btn,
+    .switcher button,
+    .history-refresh,
+    .account-link,
+    .logout-small,
+    .nav-links a {
+        transition: none;
+    }
+
+    .btn-primary:hover,
+    .btn-secondary:hover,
+    .btn-play-nav:hover,
+    .btn-auth-nav:hover,
+    .btn-create-nav:hover,
+    .uniform-btn:hover,
+    .btn-action:hover,
+    .btn-ready:hover,
+    .submit-btn:hover,
+    .secondary-btn:hover,
+    .danger-btn:hover,
+    .tab-btn:hover,
+    .switcher button:hover,
+    .history-refresh:hover,
+    .account-link:hover,
+    .logout-small:hover,
+    .nav-links a:hover {
+        transform: none;
+        box-shadow: none;
+    }
+}
+
+/* ===== Navbar responsiva partilhada pelas 4 páginas ===== */
+@media (max-width: 640px) {
+    .navbar {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        padding: 14px 5%;
+        text-align: center;
+    }
+
+    .logo {
+        font-size: 1.1rem;
+        justify-content: center;
+    }
+
+    .nav-right {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .nav-links {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .nav-links a {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    .nav-auth {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .nav-user-label {
+        max-width: 140px;
+    }
+}
