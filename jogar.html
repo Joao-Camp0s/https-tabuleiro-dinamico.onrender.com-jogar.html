@@ -196,8 +196,17 @@
     <script src="/socket.io/socket.io.js"></script> 
     
     <script>
+        // Índice deste ficheiro (é grande, por isso aqui fica um mapa geral):
+        //   1. Supabase + histórico de partidas (guardarPartidaNoBanco, carregarHistoricoPartidas)
+        //   2. window.onload — arranca tudo ao abrir a página
+        //   3. Relógio (timeControlSeconds, tickClock, renderClocks)
+        //   4. Motor Stockfish (initStockfish, stockfishBestMove) — só usado nos níveis 4/5 do xadrez
+        //   5. XADREZ: tabuleiro (initBoard), clicar-para-jogar (onSquareClick/onDrop/tentarJogadaXadrez),
+        //      IA simples (makeMove, níveis 1-3), controlos de tamanho/arrastar do tabuleiro
+        //   6. MULTIJOGADOR ONLINE (Socket.io): criar/entrar em salas, lista de salas, coinflip de cores
+        //   7. DAMAS: estado do tabuleiro (damasState), cliques (handleDamasClick), IA (executarJogadaIADamas)
         // ==========================================
-        // CONFIGURAÇÃO DOS CREDENCIAIS DO SUPABASE (CORRIGIDO)
+        // CONFIGURAÇÃO DOS CREDENCIAIS DO SUPABASE
         // ==========================================
         const SUPABASE_URL = window.APP_SUPABASE?.url;
         const SUPABASE_KEY = window.APP_SUPABASE?.publishableKey; 

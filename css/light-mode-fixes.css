@@ -1,3 +1,6 @@
+/* light-mode-fixes.css — ajustes ao modo claro (ativado pela classe body.light-mode, ver js/theme-toggle.js).
+   Carregado depois do CSS específico de cada página mas antes de buttons.css. Aqui ficam sobretudo
+   correções de contraste/cor que só fazem sentido no modo claro (o CSS de cada página assume modo escuro). */
 body.light-mode {
     background: radial-gradient(circle at top, #f4f7fb 0%, #ffffff 58%, #eef4ff 100%) !important;
 }

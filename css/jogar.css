@@ -1,3 +1,13 @@
+/* jogar.css — estilos da página de jogo (xadrez + damas).
+   Índice rápido:
+     - Variáveis de cor (:root / body.light-mode) e navbar
+     - Layout geral (.game-container, .board-area, .board-stage, .board-wrapper)
+     - Indicadores de jogadas possíveis (destaque de casas, xadrez e damas)
+     - Peças de damas (.d-piece, .d-crown) e tabuleiro de damas (#checkersBoard)
+     - Painel lateral (.control-panel): modalidade, relógio (.clocks-box), salas online (.online-room-*)
+     - Histórico de partidas (.history-box)
+     - Responsivo (media queries no fundo do ficheiro) */
+
 :root {
     --accent-blue: #3498db;
     --accent-green: #2ecc71;
@@ -87,6 +97,7 @@ body {
     text-transform: uppercase;
     font-size: 0.85rem;
 }
+/* ===== Layout principal: tabuleiro + painel de controlo + histórico ===== */
 .game-container {
     display: grid;
     grid-template-columns: minmax(320px, 1fr) 360px;
@@ -428,6 +439,7 @@ body {
 
 /* Size controls specific styling */
 
+/* ===== Tabuleiro e peças de Damas ===== */
 #myBoard, #checkersBoard { width: 100% !important; height: 100% !important; }
 
 #checkersBoard {
@@ -517,6 +529,7 @@ body {
 .white-1e1d7 { background-color: var(--board-light) !important; transition: 0.4s; }
 .black-3c85d { background-color: var(--board-dark) !important; transition: 0.4s; }
 
+/* ===== Painel lateral: modalidade/modo, relógio, salas online, estilo das peças ===== */
 .control-panel {
     grid-area: controls;
     background: var(--panel-bg); backdrop-filter: blur(15px);
@@ -688,6 +701,7 @@ select, .btn-action {
     font-size: 0.8rem;
 }
 
+/* ===== Histórico de partidas (fundo da página) ===== */
 .history-box {
     grid-area: history;
     background: rgba(0, 0, 0, 0.22);
@@ -803,6 +817,7 @@ select, .btn-action {
     line-height: 1.5;
 }
 
+/* ===== Responsivo: ecrãs até 980px (tablet/telemóvel) reorganizam o grid numa só coluna ===== */
 @media (max-width: 980px) {
     body {
         height: auto;

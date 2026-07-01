@@ -1,5 +1,9 @@
-/* Estilo base unificado: mesma forma e tipografia em todos os botões do site.
-   As cores continuam a variar consoante a função de cada botão. */
+/* buttons.css — estilo base unificado para todos os botões do site (mesma forma e tipografia;
+   as cores continuam a variar consoante a função de cada botão).
+   Este ficheiro é sempre o ÚLTIMO <link> de CSS em cada página (depois do CSS específico da
+   página e do light-mode-fixes.css), de propósito: assim consegue substituir regras anteriores
+   sem precisar de !important. Se um botão parecer "errado" nalguma página, é provável que a
+   regra a mudar esteja aqui, não no CSS dessa página. */
 .btn-primary,
 .btn-secondary,
 .btn-play-nav,

@@ -1,3 +1,5 @@
+/* aprende.css — página de aprendizagem (aprende.html): separadores Xadrez/Damas (.tabs-container),
+   secções de estudo (.learn-section), puzzles táticos (.puzzle-*) e cartões de grandes mestres (.player-item) */
 :root {
     --accent-blue: #3498db;
     --accent-blue-glow: rgba(52, 152, 219, 0.35);

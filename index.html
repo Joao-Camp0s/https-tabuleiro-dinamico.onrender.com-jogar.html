@@ -16,6 +16,8 @@
 </head>
 <body>
 
+    <!-- NAVBAR: igual em todas as páginas (index/aprende/entrar/jogar), só muda qual link tem a classe "active".
+         navGuestActions/navUserActions são alternados pelo js/navbar-session.js consoante haja sessão iniciada. -->
     <nav class="navbar">
         <a href="index.html" class="logo"><span>♟</span> TABULEIRO DINÂMICO</a>
         <div class="nav-right">
@@ -37,16 +39,17 @@
         </div>
     </nav>
 
+    <!-- HERO: primeira secção visível, com os botões principais de entrada no site -->
     <section class="hero-section">
         <div class="knight-bg"></div>
-        
+
         <div class="hero-container">
             <div class="hero-card">
                 <h1>Aprende e Testa os <br><span style="color: var(--accent-blue);">teus Limites.</span></h1>
                 <p>
                     Enfrenta os maiores desafios, aprimora a tua tática e descobre até onde a tua mente te pode levar. O próximo grande movimento é teu.
                 </p>
-                
+
                 <div class="hero-btns">
                     <a href="jogar.html" class="btn-primary uniform-btn">Começar Agora</a>
                     <a href="aprende.html" class="btn-secondary uniform-btn secondary">Aprender Regras</a>
@@ -55,6 +58,7 @@
         </div>
     </section>
 
+    <!-- SOBRE: cartões com os destaques do site -->
     <section id="sobre" class="section-about">
         <div class="about-grid">
             <div class="about-card">

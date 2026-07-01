@@ -40,6 +40,7 @@
         </div>
     </nav>
 
+    <!-- Alterna entre o conteúdo de #content-xadrez e #content-damas (ver switchGameTab no <script> no fundo) -->
     <div class="tabs-container">
         <button class="tab-btn active" onclick="switchGameTab('xadrez')">♟ Treino de Xadrez</button>
         <button class="tab-btn" onclick="switchGameTab('damas')">⛂ Treino de Damas</button>
@@ -51,6 +52,7 @@
             <p>Aprende as regras, domina padrões táticos, estuda finais e conhece mestres que marcaram a história do xadrez e das damas.</p>
         </header>
 
+        <!-- CONTEÚDO DE XADREZ: texto de estudo + o puzzle "mate em 1" (#puzzleChessBoard, lógica no <script> em baixo) -->
         <div id="content-xadrez" class="tab-content active">
             <section class="learn-section">
                 <div class="hero-panel">
@@ -322,6 +324,7 @@
             </section>
         </div>
 
+        <!-- CONTEÚDO DE DAMAS: texto de estudo + o puzzle "captura obrigatória" (#puzzleDamasBoard, lógica no <script> em baixo) -->
         <div id="content-damas" class="tab-content">
             <section class="learn-section">
                 <div class="hero-panel">
@@ -500,6 +503,12 @@
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script>
+        // Índice deste ficheiro:
+        //   - switchGameTab: alterna entre a aba de Xadrez e de Damas
+        //   - Desafio "Mate em 1" (xadrez): puzzleChess... — usa chessboard.js + chess.js, como em jogar.html
+        //   - Desafio "Captura Obrigatória" (damas): puzzleDamas... — tabuleiro simples desenhado à mão,
+        //     é uma versão isolada e simplificada da lógica de damas de jogar.html, só para este exercício
+
         function switchGameTab(mode) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));

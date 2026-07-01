@@ -81,6 +81,7 @@
                 <p class="helper">Ja tens conta? <a href="entrar.html">Entra aqui</a>.</p>
             </form>
 
+            <!-- Painel de conta: só fica visível (ver showSession/hideSession no <script>) quando há sessão iniciada -->
             <div id="sessionBox" class="session-box hidden">
                 <strong id="sessionEmail">Sessao ativa.</strong>
                 <p id="sessionText">Aqui podes gerir a tua conta, consultar o historico e atualizar a tua password.</p>
@@ -132,6 +133,7 @@
             </div>
         </section>
 
+        <!-- Ranking: visível sempre, com ou sem sessão iniciada (preenchido por carregarRanking) -->
         <section class="auth-card leaderboard-card">
             <h1 style="font-size: 1.6rem;">Ranking Global</h1>
             <p>As contas com mais vitórias registadas no site.</p>
@@ -142,6 +144,14 @@
     </main>
 
     <script>
+        // Índice deste ficheiro:
+        //   - Configuração do Supabase e referências aos elementos do formulário
+        //   - Histórico e estatísticas: calcularEstatisticas, renderHistoricoPartidas, carregarHistoricoPartidas
+        //   - Navegação entre login/registo: showNotice/hideNotice, setMode
+        //   - Sessão: verificarSessao, showSession (mostra o painel de conta), hideSession (mostra o login)
+        //   - Listeners dos 3 formulários: loginForm, registerForm, passwordForm
+        //   - Ranking: carregarRanking (tabela "leaderboard" no Supabase)
+        //   - window.onload no fundo: é o que arranca tudo isto ao abrir a página
         const SUPABASE_URL = window.APP_SUPABASE?.url;
         const SUPABASE_KEY = window.APP_SUPABASE?.publishableKey;
 
@@ -192,6 +202,9 @@
             return `${dataTexto} às ${horaTexto}`;
         }
 
+        // Conta vitórias/derrotas/empates a partir das partidas guardadas (resultado é sempre do ponto de
+        // vista das Brancas/Pretas, não sabemos qual o utilizador jogou — por isso "vitória" aqui assume
+        // sempre o lado das Brancas; é uma aproximação simples, não distingue quem jogou com que cor)
         function calcularEstatisticas(partidas) {
             let vitorias = 0, derrotas = 0, empates = 0;
 
@@ -300,6 +313,7 @@
             authNotice.textContent = '';
         }
 
+        // Alterna a página entre o formulário de login e o de criar conta (mode = 'login' | 'register')
         function setMode(mode) {
             const isRegister = mode === 'register';
             loginForm.classList.toggle('hidden', isRegister);
@@ -324,6 +338,8 @@
             return user?.user_metadata?.username || user?.user_metadata?.display_name || user?.email || 'Utilizador';
         }
 
+        // Esconde os formulários de login/registo e mostra o painel de conta (estatísticas,
+        // mudar password, histórico) — chamado assim que se confirma que há sessão iniciada
         function showSession(user) {
             pageTitle.textContent = 'Gerir Conta';
             pageSubtitle.textContent = 'Consulta o teu histórico, muda a palavra-passe ou termina a sessão quando precisares.';
@@ -340,6 +356,7 @@
             carregarHistoricoPartidas();
         }
 
+        // Volta a mostrar os formulários de login/registo (chamado ao carregar a página sem sessão, ou ao sair)
         function hideSession() {
             utilizadorAtual = null;
             navGuestActions.style.display = 'block';
@@ -385,6 +402,7 @@
             showNotice('Sessao terminada com sucesso.', 'success');
         }
 
+        // --- FORMULÁRIO DE LOGIN ---
         loginForm.addEventListener('submit', async function (event) {
             event.preventDefault();
             hideNotice();
@@ -414,6 +432,7 @@
             showSession(data.user);
         });
 
+        // --- FORMULÁRIO DE CRIAR CONTA ---
         registerForm.addEventListener('submit', async function (event) {
             event.preventDefault();
             hideNotice();
@@ -477,6 +496,7 @@
             showNotice('Conta criada com sucesso. O nome de utilizador foi associado ao teu perfil. Se necessario, confirma o teu email antes de entrares.', 'success');
         });
 
+        // --- FORMULÁRIO DE MUDAR PALAVRA-PASSE (só visível com sessão iniciada) ---
         passwordForm.addEventListener('submit', async function (event) {
             event.preventDefault();
             hideNotice();
@@ -521,6 +541,8 @@
             });
         }
 
+        // --- RANKING GLOBAL --- lê a tabela "leaderboard" do Supabase (é mantida à parte da
+        // tabela "partidas"; ver sql anteriormente usado para a criar/atualizar no Supabase)
         async function carregarRanking() {
             const el = document.getElementById('leaderboardList');
             if (!el) return;

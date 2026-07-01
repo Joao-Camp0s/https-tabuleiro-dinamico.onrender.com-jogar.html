@@ -11,6 +11,8 @@ window.SoundManager = (function () {
         return ctx;
     }
 
+    // Toca uma única nota. freq = frequência (Hz), startTime = quando começa (segundos desde o início do contexto),
+    // duration = quanto dura, type = forma de onda ('sine', 'square', 'triangle'...), gain = volume (0-1).
     function tone(audioCtx, freq, startTime, duration, type, gain) {
         const osc = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
@@ -25,6 +27,8 @@ window.SoundManager = (function () {
         osc.stop(startTime + duration + 0.03);
     }
 
+    // Toca uma sequência de notas (array de [freq, atraso, duração, tipo, volume]) — é assim que se compõem
+    // os "efeitos" abaixo (ex: captura = duas notas em sequência para soar diferente de uma jogada normal)
     function play(sequence) {
         if (muted) return;
         const audioCtx = getCtx();
@@ -35,6 +39,7 @@ window.SoundManager = (function () {
         });
     }
 
+    // API pública usada em jogar.html: SoundManager.move(), SoundManager.capture(), etc.
     return {
         move: function () { play([[520, 0, 0.09, 'sine', 0.14]]); },
         capture: function () { play([[420, 0, 0.08, 'triangle', 0.2], [280, 0.06, 0.12, 'triangle', 0.16]]); },
