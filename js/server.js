@@ -117,6 +117,7 @@ io.on('connection', (socket) => {
     });
 });
 
-http.listen(3000, () => {
-    console.log('Sucesso! Abre http://localhost:3000/jogar.html');
+const PORT = process.env.PORT || 3000;
+http.listen(PORT, () => {
+    console.log('Sucesso! Abre http://localhost:' + PORT + '/jogar.html');
 });
