@@ -659,7 +659,8 @@
         var board = null;
         var game = new Chess();
         var currentPieceTheme = 'cburnett';
-        var selectedChessSquare = null;
+        var selectedChessSquare = null; // casa selecionada por clique (modo "clicar para jogar", útil no telemóvel onde arrastar é mais difícil)
+        var boardArrastando = false; // true enquanto uma peça está a ser arrastada, para o clique nas casas vazias não interferir com o arrastar
 
         const resizeObserver = new ResizeObserver(() => { 
             if (board && document.getElementById('gameType').value === 'xadrez') board.resize(); 
@@ -839,15 +840,76 @@
             if (!selectedChessSquare) removeGreySquares();
         }
 
+        // Devolve o código da peça numa casa (ex: 'wP', 'bK') ou null se estiver vazia — usado para saber
+        // de quem é a peça clicada, tanto no modo de arrastar como no modo de clicar.
+        function obterCodigoPeca(casa) {
+            const p = game.get(casa);
+            return p ? (p.color + p.type.toUpperCase()) : null;
+        }
+
+        // Modo "clicar para jogar": 1º clique seleciona uma peça própria, 2º clique na casa de destino executa a jogada.
+        // Isto é o que torna o jogo utilizável em telemóvel, onde arrastar (drag) a peça é difícil.
+        // Nota: o chessboard.js 1.0.0 não tem um evento de clique embutido, por isso esta função é chamada
+        // de duas formas diferentes (ver mais abaixo): ao largar uma peça na mesma casa onde foi pega (onDrop),
+        // e ao clicar diretamente numa casa vazia (listener ligado a #myBoard, perto do fim do ficheiro).
         function onSquareClick(square, piece) {
             if (document.getElementById('gameType').value === 'damas') return;
+
+            const ehMinhaVez = document.getElementById('gameMode').value !== 'online' || estaNaMinhaVezOnline();
+            const pecaPropria = piece && piece[0] === game.turn(); // a cor da peça clicada é a cor a quem toca jogar
+
+            // Nada selecionado ainda: só seleciona se for uma peça que se pode mesmo mover agora.
+            if (!selectedChessSquare) {
+                if (pecaPropria && ehMinhaVez) {
+                    selectedChessSquare = square;
+                    highlightChessMoves(square);
+                }
+                return;
+            }
+
+            // Clicar outra vez na mesma casa cancela a seleção.
             if (selectedChessSquare === square) {
                 selectedChessSquare = null;
                 removeGreySquares();
                 return;
             }
-            selectedChessSquare = square;
-            highlightChessMoves(square);
+
+            // Clicar noutra peça própria troca a seleção para essa peça.
+            if (pecaPropria) {
+                selectedChessSquare = square;
+                highlightChessMoves(square);
+                return;
+            }
+
+            // Caso contrário, tenta jogar da casa selecionada para a casa clicada.
+            const origem = selectedChessSquare;
+            selectedChessSquare = null;
+            removeGreySquares();
+            tentarJogadaXadrez(origem, square);
+        }
+
+        // Executa uma jogada de xadrez (chamada tanto pelo arrastar como pelo clicar-clicar).
+        // Trata de tudo o que acontece depois de uma jogada válida: som, estado do jogo, relógio, jogada da IA e sincronização online.
+        // Devolve true se a jogada foi feita, false se era ilegal.
+        function tentarJogadaXadrez(origem, destino) {
+            if (jogoBloqueado) return false;
+            const modoXadrez = document.getElementById('gameMode').value;
+            if (modoXadrez === 'online' && !estaNaMinhaVezOnline()) return false;
+
+            const move = game.move({ from: origem, to: destino, promotion: 'q' });
+            if (move === null) return false; // jogada ilegal
+
+            board.position(game.fen());
+            SoundManager[move.captured ? 'capture' : 'move']();
+            updateStatus();
+            syncClockToTurn();
+
+            if (modoXadrez === 'ia') {
+                window.setTimeout(makeMove, 500);
+            } else if (modoXadrez === 'online' && onlineSocket && onlineRoomId) {
+                onlineSocket.emit('movimento', { room: onlineRoomId, tipo: 'xadrez', fen: game.fen() });
+            }
+            return true;
         }
 
         async function makeMove() {
@@ -911,27 +973,26 @@
             return highValue.length > 0 ? highValue[0] : moves.find(m => m.includes('x'));
         }
 
+        // Chamado ao largar uma peça arrastada. Se a peça for largada na MESMA casa onde foi pega
+        // (ou seja, o utilizador só clicou nela sem a arrastar), trata-se como um clique de seleção
+        // em vez de uma jogada — é assim que se implementa "clicar para jogar" em cima de uma
+        // biblioteca pensada só para arrastar.
         function onDrop (source, target) {
-            if (jogoBloqueado) return 'snapback';
-            const modoXadrez = document.getElementById('gameMode').value;
-            if (modoXadrez === 'online' && !estaNaMinhaVezOnline()) return 'snapback';
+            if (source === target) {
+                onSquareClick(source, obterCodigoPeca(source));
+                return;
+            }
 
             selectedChessSquare = null;
             removeGreySquares();
-            var move = game.move({ from: source, to: target, promotion: 'q' });
-            if (move === null) return 'snapback';
-            SoundManager[move.captured ? 'capture' : 'move']();
-            updateStatus();
-            syncClockToTurn();
-
-            if (modoXadrez === 'ia') {
-                window.setTimeout(makeMove, 500);
-            } else if (modoXadrez === 'online' && onlineSocket && onlineRoomId) {
-                onlineSocket.emit('movimento', { room: onlineRoomId, tipo: 'xadrez', fen: game.fen() });
-            }
+            const sucesso = tentarJogadaXadrez(source, target);
+            if (!sucesso) return 'snapback'; // devolve a peça à casa de origem se a jogada for ilegal
         }
 
-        function onSnapEnd () { board.position(game.fen()); }
+        function onSnapEnd () {
+            board.position(game.fen());
+            boardArrastando = false; // o arrastar (ou o "clique" simulado por ele) já terminou
+        }
 
         function updateStatus() {
             var status = game.turn() === 'b' ? 'PRETAS A JOGAR' : 'BRANCAS A JOGAR';
@@ -1159,15 +1220,27 @@
                 draggable: true,
                 position: game.fen(),
                 orientation: orientation || 'white',
+                onDragStart: function () { boardArrastando = true; },
                 onDrop: onDrop,
                 onMouseoutSquare: onMouseoutSquare,
                 onMouseoverSquare: onMouseoverSquare,
-                onSquareClick: onSquareClick,
                 onSnapEnd: onSnapEnd,
                 pieceTheme: 'https://lichess1.org/assets/_6S69X6/piece/' + currentPieceTheme + '/{piece}.svg'
             });
             try { board.resize(); } catch(e) { console.warn('Board init warning:', e); }
         }
+
+        // Liga o clique nas casas VAZIAS do tabuleiro (as casas com peça já são apanhadas pelo onDrop acima,
+        // já que largar uma peça em cima de si própria conta como um clique). Fica ligado uma única vez,
+        // porque a div #myBoard nunca é destruída — só o conteúdo lá dentro é recriado ao mudar de estilo de peças.
+        $('#myBoard').on('click', '.square-55d63', function () {
+            if (boardArrastando) return; // ignora o clique "fantasma" que surge logo a seguir a um arrastar
+            const casa = this.className.split(/\s+/).find(c => /^square-[a-h][1-8]$/.test(c));
+            if (!casa) return;
+            const nomeCasa = casa.replace('square-', '');
+            if (game.get(nomeCasa)) return; // casa ocupada, já tratada pelo onDrop
+            onSquareClick(nomeCasa, null);
+        });
 
         async function handleReset() {
             if (document.getElementById('gameType').value === 'xadrez') {
